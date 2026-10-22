@@ -154,6 +154,9 @@ An open-source Manifest V3 Chrome Extension that displays a live, draggable call
 
 Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines on reporting bugs, requesting features, and submitting pull requests.
 
+## 👥 Contributors
+- **Sadid Abrar** (`@sadidabrar`) — Creator & Maintainer
+- **Gemini** — AI Collaborator & Co-Author (Extension architecture, Manifest V3 implementation, UI/UX design, and open-source documentation)
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
