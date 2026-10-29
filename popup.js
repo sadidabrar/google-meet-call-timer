@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const meetingCodeEl = document.getElementById('meeting-code');
   const statusBadgeEl = document.getElementById('status-badge');
   const pauseBtn = document.getElementById('pause-btn');
-  const resetBtn = document.getElementById('reset-btn');
+  const resetBtn = document.getElementById('reset-btn');const syncMeetBtn = document.getElementById('sync-meet-btn');
 
   const setHhEl = document.getElementById('set-hh');
   const setMmEl = document.getElementById('set-mm');
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.addEventListener('click', () => {
       sendToActiveTab({ action: 'RESET_TIMER' }, () => pollStatus());
     });
-  }
+  if (syncMeetBtn) { syncMeetBtn.addEventListener('click', () => { sendToActiveTab({ action: 'SYNC_MEET_START' }, () => pollStatus()); }); }}
 
   const offsetBtns = document.querySelectorAll('.offset-btn');
   offsetBtns.forEach((btn) => {
