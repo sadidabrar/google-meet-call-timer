@@ -1,16 +1,26 @@
 {
   "manifest_version": 3,
   "name": "Google Meet Call Duration Timer",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Displays the live call duration in Google Meet",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
   "action": {
     "default_popup": "popup.html"
   },
   "content_scripts": [
     {
-      "matches": ["https://meet.google.com/*"],
-      "js": ["content.js"],
-      "css": ["styles.css"]
+      "matches": [
+        "https://meet.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ]
     }
   ]
 }
