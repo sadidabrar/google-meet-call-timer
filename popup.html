@@ -1,33 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charse<!DOCTYPE html>
+<html>
+<head>
   <meta charset="utf-8">
-  <title>Google Meet Call Duration Timer</title>
-  <style>
-    body {
-      width: 220px;
-      padding: 16px;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f8f9fa;
-      margin: 0;
-    }
-    h2 {
-      font-size: 16px;
-      color: #202124;
-      margin-top: 0;
-      margin-bottom: 8px;
-    }
-    p {
-      font-size: 12px;
-      color: #5f6368;
-      margin: 0;
-    }
-  </style>
+  <title>Meet Call Timer</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <h2>Meet Call Timer</h2>
-  <p>Displays live duration during Google Meet calls.</p>
+<body class="popup-body">
+  <div class="container">
+    <header class="header">
+      <h1 class="title">⏱ Meet Call Timer</h1>
+      <span id="status-badge" class="badge">Inactive</span>
+    </header>
+
+    <section class="card">
+      <div class="card-header">
+        <span class="card-title">Live Call</span>
+        <span id="meeting-code" class="meeting-code">---</span>
+      </div>
+      <div id="live-time" class="live-timer">00:00:00</div>
+      <div class="btn-group">
+        <button id="pause-btn" class="btn primary">Pause</button>
+        <button id="reset-btn" class="btn danger">Reset (00:00:00)</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Manually Adjust Timer</h2>
+      <div class="offset-buttons">
+        <button class="btn offset-btn" data-delta="-300000">-5m</button>
+        <button class="btn offset-btn" data-delta="-60000">-1m</button>
+        <button class="btn offset-btn" data-delta="60000">+1m</button>
+        <button class="btn offset-btn" data-delta="300000">+5m</button>
+        <button class="btn offset-btn" data-delta="900000">+15m</button>
+      </div>
+      <div class="exact-time-inputs">
+        <input type="number" id="set-hh" min="0" max="99" placeholder="HH" value="0">
+        <span>:</span>
+        <input type="number" id="set-mm" min="0" max="59" placeholder="MM" value="00">
+        <span>:</span>
+        <input type="number" id="set-ss" min="0" max="59" placeholder="SS" value="00">
+        <button id="set-exact-btn" class="btn secondary">Set Time</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Overlay & Alert Settings</h2>
+      <div class="setting-row">
+        <label for="toggle-overlay">
+          <input type="checkbox" id="toggle-overlay" checked>
+          Show in-call floating badge
+        </label>
+      </div>
+      <div class="setting-row">
+        <label for="select-position">Default badge position:</label>
+        <select id="select-position">
+          <option value="top-left">top-left</option>
+          <option value="top-right" selected>top-right</option>
+          <option value="bottom-left">bottom-left</option>
+          <option value="bottom-right">bottom-right</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="warn-minutes">Overtime alert (minutes):</label>
+        <input type="number" id="warn-minutes" min="1" max="999" value="60">
+      </div>
+      <div class="setting-row">
+        <label for="toggle-sound">
+          <input type="checkbox" id="toggle-sound">
+          Play sound chime on overtime
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Recent Calls History</h2>
+        <div class="history-actions">
+          <button id="export-csv" class="btn small">Export CSV</button>
+          <button id="clear-history" class="btn small danger">Clear</button>
+        </div>
+      </div>
+      <div id="history-list" class="history-list"></div>
+    </section>
+  </div>
   <script src="popup.js"></script>
 </body>
-</html>
+      width: 220
