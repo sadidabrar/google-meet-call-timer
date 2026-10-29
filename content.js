@@ -1,200 +1,344 @@
-let firstStartedAtMs = Date.now();
-let totalPausedMs = 0;
-let isSessionActive = false;
-let widgetElement = null;
+(function () {
+  let firstStartedAtMs = Date.now();
+  let totalPausedMs = 0;
+  let manualOffsetMs = 0;
+  let isPaused = false;
+  let pauseStartedAtMs = null;
+  let widgetElement = null;
+  let drawerElement = null;
+  let currentMeetingCode = '';
 
-const EXPIRATION_WINDOW_MS = 6 * 60 * 60 * 1000;
+  let settings = {
+    showOverlay: true,
+    position: 'top-right',
+    warnMinutes: 60,
+    soundAlert: false
+  };
 
-function getMeetingCode() {
-  const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
-  if (!path) return null;
-  const parts = path.split('/');
-  const code = parts[0].split('?')[0];
-  if (code && code.length >= 3 && code !== 'landing') {
-    return code;
+  let hasChimedOvertime = false;
+  const EXPIRATION_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+  function extractMeetingCode() {
+    const pathname = window.location.pathname;
+    const match = pathname.match(/\/([a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{3})/i);
+    return match ? match[1] : '';
   }
-  return null;
-}
 
-function startCallSession() {
-  isSessionActive = true;
-  const code = getMeetingCode();
-  if (!code) {
-    firstStartedAtMs = Date.now();
-    totalPausedMs = 0;
-    return;
+  function getElapsedMs() {
+    if (!firstStartedAtMs) return 0;
+    const now = isPaused && pauseStartedAtMs ? pauseStartedAtMs : Date.now();
+    const rawElapsed = now - firstStartedAtMs - totalPausedMs + manualOffsetMs;
+    return Math.max(0, rawElapsed);
   }
 
-  const storageKey = `meet_session_${code}`;
-  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get([storageKey], (result) => {
-      const data = result ? result[storageKey] : null;
+  function formatHHMMSS(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const hh = Math.floor(totalSec / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60);
+    const ss = totalSec % 60;
+    return [
+      String(hh).padStart(2, '0'),
+      String(mm).padStart(2, '0'),
+      String(ss).padStart(2, '0')
+    ].join(':');
+  }
+
+  function playOvertimeChime() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch (e) {
+      console.error('Chime error', e);
+    }
+  }
+
+  function loadSettings() {
+    chrome.storage.local.get('gm_timer_settings', (data) => {
+      if (data.gm_timer_settings) {
+        settings = Object.assign(settings, data.gm_timer_settings);
+        applySettings();
+      }
+    });
+  }
+
+  function applySettings() {
+    if (!widgetElement) return;
+    widgetElement.style.display = settings.showOverlay ? 'flex' : 'none';
+    widgetElement.className = `gmeet-timer-badge pos-${settings.position || 'top-right'}`;
+  }
+
+  function loadSession(code) {
+    if (!code) return;
+    currentMeetingCode = code;
+    chrome.storage.local.get('gm_timer_active_sessions', (data) => {
+      const sessions = data.gm_timer_active_sessions || {};
+      const session = sessions[code];
       const now = Date.now();
-      if (data && data.firstStartedAtMs && (now - data.timestamp < EXPIRATION_WINDOW_MS)) {
-        firstStartedAtMs = data.firstStartedAtMs;
-        totalPausedMs = data.totalPausedMs || 0;
+      if (session && (now - session.lastUpdatedMs < EXPIRATION_WINDOW_MS)) {
+        firstStartedAtMs = session.firstStartedAtMs || now;
+        totalPausedMs = session.totalPausedMs || 0;
+        manualOffsetMs = session.manualOffsetMs || 0;
       } else {
         firstStartedAtMs = now;
         totalPausedMs = 0;
-        chrome.storage.local.set({
-          [storageKey]: {
-            firstStartedAtMs: firstStartedAtMs,
-            totalPausedMs: totalPausedMs,
-            timestamp: now
-          }
-        });
+        manualOffsetMs = 0;
+        saveSession();
       }
     });
-  } else {
+  }
+
+  function saveSession() {
+    if (!currentMeetingCode) return;
+    chrome.storage.local.get('gm_timer_active_sessions', (data) => {
+      const sessions = data.gm_timer_active_sessions || {};
+      sessions[currentMeetingCode] = {
+        firstStartedAtMs,
+        totalPausedMs,
+        manualOffsetMs,
+        lastUpdatedMs: Date.now()
+      };
+      chrome.storage.local.set({ gm_timer_active_sessions: sessions });
+    });
+  }
+
+  function recordHistory() {
+    if (!currentMeetingCode) return;
+    const elapsed = getElapsedMs();
+    if (elapsed < 5000) return;
+    const record = {
+      meetingCode: currentMeetingCode,
+      date: new Date().toLocaleString(),
+      durationFormatted: formatHHMMSS(elapsed),
+      durationMs: elapsed,
+      timestamp: Date.now()
+    };
+    chrome.storage.local.get('gm_timer_call_history', (data) => {
+      const history = data.gm_timer_call_history || [];
+      const existingIdx = history.findIndex(h => h.meetingCode === currentMeetingCode);
+      if (existingIdx >= 0) {
+        history[existingIdx] = record;
+      } else {
+        history.unshift(record);
+      }
+      chrome.storage.local.set({ gm_timer_call_history: history });
+    });
+  }
+
+  function createWidget() {
+    if (widgetElement) return;
+    widgetElement = document.createElement('div');
+    widgetElement.id = 'gmeet-timer-overlay';
+    widgetElement.className = `gmeet-timer-badge pos-${settings.position || 'top-right'}`;
+
+    const header = document.createElement('div');
+    header.className = 'gmeet-timer-header';
+
+    const timerText = document.createElement('span');
+    timerText.className = 'gmeet-timer-text';
+    timerText.id = 'gmeet-timer-time';
+    timerText.textContent = '00:00:00';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'gmeet-timer-edit-btn';
+    editBtn.textContent = '✎';
+    editBtn.title = 'Adjust Timer';
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (drawerElement) {
+        drawerElement.classList.toggle('hidden');
+      }
+    });
+
+    header.appendChild(timerText);
+    header.appendChild(editBtn);
+
+    drawerElement = document.createElement('div');
+    drawerElement.className = 'gmeet-timer-drawer hidden';
+
+    const quickRow = document.createElement('div');
+    quickRow.className = 'gmeet-drawer-row';
+
+    const offsets = [
+      { label: '-5m', delta: -300000 },
+      { label: '-1m', delta: -60000 },
+      { label: '+1m', delta: 60000 },
+      { label: '+5m', delta: 300000 },
+      { label: '+15m', delta: 900000 }
+    ];
+
+    offsets.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'gmeet-drawer-btn';
+      btn.textContent = opt.label;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        adjustOffset(opt.delta);
+      });
+      quickRow.appendChild(btn);
+    });
+
+    const inputRow = document.createElement('div');
+    inputRow.className = 'gmeet-drawer-input-row';
+
+    const hhIn = document.createElement('input');
+    hhIn.type = 'number';
+    hhIn.placeholder = 'HH';
+    hhIn.value = '0';
+
+    const mmIn = document.createElement('input');
+    mmIn.type = 'number';
+    mmIn.placeholder = 'MM';
+    mmIn.value = '00';
+
+    const ssIn = document.createElement('input');
+    ssIn.type = 'number';
+    ssIn.placeholder = 'SS';
+    ssIn.value = '00';
+
+    const setBtn = document.createElement('button');
+    setBtn.className = 'gmeet-drawer-btn';
+    setBtn.textContent = 'Set';
+    setBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const hh = parseInt(hhIn.value, 10) || 0;
+      const mm = parseInt(mmIn.value, 10) || 0;
+      const ss = parseInt(ssIn.value, 10) || 0;
+      setExactTime((hh * 3600 + mm * 60 + ss) * 1000);
+    });
+
+    inputRow.appendChild(hhIn);
+    inputRow.appendChild(document.createTextNode(':'));
+    inputRow.appendChild(mmIn);
+    inputRow.appendChild(document.createTextNode(':'));
+    inputRow.appendChild(ssIn);
+    inputRow.appendChild(setBtn);
+
+    drawerElement.appendChild(quickRow);
+    drawerElement.appendChild(inputRow);
+
+    widgetElement.appendChild(header);
+    widgetElement.appendChild(drawerElement);
+
+    document.body.appendChild(widgetElement);
+    applySettings();
+  }
+
+  function adjustOffset(deltaMs) {
+    manualOffsetMs += deltaMs;
+    saveSession();
+    updateUI();
+  }
+
+  function setExactTime(targetMs) {
+    const now = isPaused && pauseStartedAtMs ? pauseStartedAtMs : Date.now();
+    manualOffsetMs = targetMs - (now - firstStartedAtMs - totalPausedMs);
+    saveSession();
+    updateUI();
+  }
+
+  function togglePause() {
+    const now = Date.now();
+    if (isPaused) {
+      if (pauseStartedAtMs) {
+        totalPausedMs += (now - pauseStartedAtMs);
+      }
+      isPaused = false;
+      pauseStartedAtMs = null;
+    } else {
+      isPaused = true;
+      pauseStartedAtMs = now;
+    }
+    saveSession();
+    updateUI();
+  }
+
+  function resetTimer() {
     firstStartedAtMs = Date.now();
     totalPausedMs = 0;
+    manualOffsetMs = 0;
+    isPaused = false;
+    pauseStartedAtMs = null;
+    hasChimedOvertime = false;
+    saveSession();
+    updateUI();
   }
-}
 
-function endCallSession() {
-  if (!isSessionActive) return;
-  isSessionActive = false;
-
-  const code = getMeetingCode();
-  if (code && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    const storageKey = `meet_session_${code}`;
-    chrome.storage.local.set({
-      [storageKey]: {
-        firstStartedAtMs: firstStartedAtMs,
-        totalPausedMs: totalPausedMs,
-        timestamp: Date.now()
-      }
-    });
-  }
-}
-
-function resetSession() {
-  firstStartedAtMs = Date.now();
-  totalPausedMs = 0;
-  const code = getMeetingCode();
-  if (code && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    const storageKey = `meet_session_${code}`;
-    chrome.storage.local.set({
-      [storageKey]: {
-        firstStartedAtMs: firstStartedAtMs,
-        totalPausedMs: totalPausedMs,
-        timestamp: Date.now()
-      }
-    });
-  }
-  updateWidgetUI();
-}
-
-function detectActiveCallInDOM() {
-  const blockedTexts = ["join now", "ask to join", "rejoin", "return to home screen"];
-  const buttonsAndLinks = document.querySelectorAll('button, a, [role="button"]');
-  for (const el of buttonsAndLinks) {
-    if (el.offsetWidth > 0 || el.offsetHeight > 0 || el.offsetParent !== null) {
-      const text = (el.textContent || '').trim().toLowerCase();
-      const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
-      for (const blocked of blockedTexts) {
-        if (text === blocked || aria === blocked || text.includes(blocked) || aria.includes(blocked)) {
-          return false;
-        }
-      }
+  function updateUI() {
+    const elapsed = getElapsedMs();
+    const timeStr = formatHHMMSS(elapsed);
+    const timeTextEl = document.getElementById('gmeet-timer-time');
+    if (timeTextEl) {
+      timeTextEl.textContent = timeStr;
     }
-  }
 
-  const iconSelectors = '.google-symbols, .google-material-icons, .material-icons, [class*="google-symbols"], [class*="google-material-icons"], [class*="material-icons"]';
-  const iconElements = document.querySelectorAll(iconSelectors);
-  let hasCallEndIcon = false;
-  for (const icon of iconElements) {
-    const text = (icon.textContent || '').trim();
-    if (text === 'call_end' || text === 'phone_disabled') {
-      if (icon.offsetWidth > 0 || icon.offsetHeight > 0 || icon.offsetParent !== null) {
-        hasCallEndIcon = true;
-        break;
-      }
+    const warnMs = (settings.warnMinutes || 60) * 60 * 1000;
+    if (elapsed >= warnMs && settings.soundAlert && !hasChimedOvertime) {
+      hasChimedOvertime = true;
+      playOvertimeChime();
     }
+
+    recordHistory();
   }
 
-  let hasLeaveButton = false;
-  const leaveButtons = document.querySelectorAll('button[aria-label*="Leave call"], button[aria-label*="leave call"], button[aria-label*="End call"], button[aria-label*="end call"], button[data-is-muted]');
-  for (const btn of leaveButtons) {
-    const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
-    if (aria.includes('leave call') || aria.includes('end call')) {
-      if (btn.offsetWidth > 0 || btn.offsetHeight > 0 || btn.offsetParent !== null) {
-        hasLeaveButton = true;
-        break;
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === 'GET_STATUS') {
+      const elapsed = getElapsedMs();
+      sendResponse({
+        meetingCode: currentMeetingCode,
+        elapsedMs: elapsed,
+        formattedTime: formatHHMMSS(elapsed),
+        isPaused: isPaused,
+        isActive: !!currentMeetingCode
+      });
+      return true;
+    } else if (msg.action === 'TOGGLE_PAUSE') {
+      togglePause();
+      sendResponse({ success: true });
+    } else if (msg.action === 'RESET_TIMER') {
+      resetTimer();
+      sendResponse({ success: true });
+    } else if (msg.action === 'ADJUST_OFFSET') {
+      adjustOffset(msg.deltaMs || 0);
+      sendResponse({ success: true });
+    } else if (msg.action === 'SET_EXACT_TIME') {
+      setExactTime(msg.targetMs || 0);
+      sendResponse({ success: true });
+    } else if (msg.action === 'UPDATE_SETTINGS') {
+      if (msg.settings) {
+        settings = Object.assign(settings, msg.settings);
+        applySettings();
       }
+      sendResponse({ success: true });
     }
-  }
-
-  return hasCallEndIcon || hasLeaveButton;
-}
-
-function createWidget() {
-  if (document.getElementById('gmeet-call-timer')) return;
-
-  widgetElement = document.createElement('div');
-  widgetElement.id = 'gmeet-call-timer';
-  widgetElement.className = 'gmeet-timer-badge';
-  widgetElement.style.pointerEvents = 'auto';
-
-  const timeDisplay = document.createElement('span');
-  timeDisplay.id = 'gmeet-timer-time';
-  timeDisplay.textContent = '00:00:00';
-
-  const resetButton = document.createElement('button');
-  resetButton.id = 'gmeet-timer-reset';
-  resetButton.textContent = '↺';
-  resetButton.title = 'Reset timer';
-  resetButton.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;margin-left:6px;font-size:12px;padding:0;pointer-events:auto;';
-  resetButton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    resetSession();
   });
 
-  widgetElement.appendChild(timeDisplay);
-  widgetElement.appendChild(resetButton);
-
-  (document.body || document.documentElement).appendChild(widgetElement);
-}
-
-function updateWidgetUI() {
-  const active = detectActiveCallInDOM();
-  if (active) {
-    if (!isSessionActive) {
-      startCallSession();
-    }
-    const widgetInDOM = document.getElementById('gmeet-call-timer');
-    if (!widgetInDOM) {
-      createWidget();
-    } else {
-      widgetElement = widgetInDOM;
-    }
-    if (widgetElement) {
-      widgetElement.style.display = 'flex';
-      widgetElement.style.alignItems = 'center';
-    }
-
-    const elapsedMs = Math.max(0, Date.now() - firstStartedAtMs - totalPausedMs);
-    const elapsedSecs = Math.floor(elapsedMs / 1000);
-    const hrs = String(Math.floor(elapsedSecs / 3600)).padStart(2, '0');
-    const mins = String(Math.floor((elapsedSecs % 3600) / 60)).padStart(2, '0');
-    const secs = String(elapsedSecs % 60).padStart(2, '0');
-
-    const timeDisplay = document.getElementById('gmeet-timer-time');
-    if (timeDisplay) {
-      timeDisplay.textContent = `${hrs}:${mins}:${secs}`;
-    } else if (widgetElement) {
-      widgetElement.textContent = `${hrs}:${mins}:${secs}`;
-    }
-  } else {
-    if (isSessionActive) {
-      endCallSession();
-    }
-    const widgetInDOM = document.getElementById('gmeet-call-timer');
-    if (widgetInDOM) {
-      widgetInDOM.style.display = 'none';
-    }
+  loadSettings();
+  const code = extractMeetingCode();
+  if (code) {
+    loadSession(code);
+    createWidget();
   }
-}
 
-setInterval(updateWidgetUI, 1000);
-updateWidgetUI();
+  setInterval(() => {
+    const checkCode = extractMeetingCode();
+    if (checkCode && checkCode !== currentMeetingCode) {
+      loadSession(checkCode);
+      createWidget();
+    }
+    if (currentMeetingCode) {
+      updateUI();
+    }
+  }, 1000);
+})();
