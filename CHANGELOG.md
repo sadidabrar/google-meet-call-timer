@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog format, and this project adheres to Semantic Versioning.
 
+## [1.0.1] - 2026-10-29
+
+### Fixed
+- Fixed call session persistence so active meeting duration is preserved across call leaves and rejoins within a 6-hour window instead of resetting.
+- Fixed Google Meet active-call DOM detection to support google-symbols icons and prevent lobby/post-call false positives, and enabled widget re-mounting when SPA re-renders DOM.
+
 ## [1.0.0] - 2026-10-22
 
 ### Added
