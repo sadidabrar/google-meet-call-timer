@@ -1,15 +1,358 @@
+/* Popup Styles */
+body.popup-body {
+  width: 348px;
+  margin: 0;
+  padding: 12px;
+  background-color: #202124;
+  color: #e8eaed;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #ffffff;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #3c4043;
+  color: #bdc1c6;
+  font-weight: 500;
+}
+
+.badge.active {
+  background-color: #137333;
+  color: #e6f4ea;
+}
+
+.badge.warning {
+  background-color: #b06000;
+  color: #fef7e0;
+}
+
+.card {
+  background-color: #292a2d;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #3c4043;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8ab4f8;
+  margin: 0;
+}
+
+.meeting-code {
+  font-family: monospace;
+  background-color: #202124;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #e8eaed;
+}
+
+.live-timer {
+  font-family: 'Roboto Mono', monospace, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+  color: #ffffff;
+  letter-spacing: 1px;
+  margin: 4px 0;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  flex: 1;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12px;
+  background-color: #3c4043;
+  color: #e8eaed;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: #4a4e51;
+}
+
+.btn.primary {
+  background-color: #8ab4f8;
+  color: #202124;
+}
+
+.btn.primary:hover {
+  background-color: #aecbfa;
+}
+
+.btn.danger {
+  background-color: #f28b82;
+  color: #202124;
+}
+
+.btn.danger:hover {
+  background-color: #f6aea9;
+}
+
+.btn.secondary {
+  background-color: #1a73e8;
+  color: #ffffff;
+}
+
+.btn.small {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.offset-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.offset-btn {
+  flex: 1;
+  padding: 6px 2px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.exact-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exact-time-inputs input[type="number"] {
+  width: 48px;
+  padding: 5px;
+  background-color: #202124;
+  border: 1px solid #3c4043;
+  color: #ffffff;
+  border-radius: 4px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.setting-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.setting-row select, .setting-row input[type="number"] {
+  background-color: #202124;
+  border: 1px solid #3c4043;
+  color: #ffffff;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.history-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.history-list {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background-color: #202124;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.history-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-code {
+  font-weight: 600;
+  color: #8ab4f8;
+}
+
+.history-date {
+  font-size: 10px;
+  color: #9aa0a6;
+}
+
+.history-duration {
+  font-family: monospace;
+  font-weight: 600;
+  color: #e8eaed;
+}
+
+.history-empty {
+  text-align: center;
+  color: #9aa0a6;
+  font-size: 12px;
+  padding: 10px 0;
+}
+
+/* In-call Floating Widget Overlay Styles */
 .gmeet-timer-badge {
   position: fixed;
-  top: 12px;
-  right: 12px;
-  background-color: rgba(32, 33, 36, 0.9);
+  z-index: 999999;
+  background-color: rgba(32, 33, 36, 0.92);
   color: #ffffff;
   font-family: 'Google Sans', Roboto, Arial, sans-serif;
   font-size: 14px;
   font-weight: 500;
   padding: 6px 12px;
   border-radius: 16px;
-  z-index: 9999;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  user-select: none;
+}
+
+.gmeet-timer-badge.pos-top-left {
+  top: 12px;
+  left: 12px;
+}
+
+.gmeet-timer-badge.pos-top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.gmeet-timer-badge.pos-bottom-left {
+  bottom: 80px;
+  left: 12px;
+}
+
+.gmeet-timer-badge.pos-bottom-right {
+  bottom: 80px;
+  right: 12px;
+}
+
+.gmeet-timer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gmeet-timer-text {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.gmeet-timer-edit-btn {
+  background: none;
+  border: none;
+  color: #8ab4f8;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.gmeet-timer-edit-btn:hover {
+  color: #aecbfa;
+}
+
+.gmeet-timer-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.gmeet-timer-drawer.hidden {
+  display: none !important;
+}
+
+.gmeet-drawer-row {
+  display: flex;
+  gap: 4px;
+}
+
+.gmeet-drawer-btn {
+  background-color: #3c4043;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.gmeet-drawer-btn:hover {
+  background-color: #5f6368;
+}
+
+.gmeet-drawer-input-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gmeet-drawer-input-row input {
+  width: 32px;
+  background-color: #202124;
+  color: #ffffff;
+  border: 1px solid #5f6368;
+  border-radius: 3px;
+  text-align: center;
+  font-size: 11px;
+  padding: 2px;
 }
