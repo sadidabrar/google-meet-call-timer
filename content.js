@@ -1,4 +1,490 @@
-(function () {
+(funct(function () {
+  let firstStartedAtMs = Date.now();
+  let totalPausedMs = 0;
+  let manualOffsetMs = 0;
+  let isPaused = false;
+  let pauseStartedAtMs = null;
+  let widgetElement = null;
+  let drawerElement = null;
+  let currentMeetingCode = '';
+
+  let settings = {
+    showOverlay: true,
+    position: 'top-center',
+    warnMinutes: 60,
+    soundAlert: false
+  };
+
+  let hasChimedOvertime = false;
+  const EXPIRATION_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+  function extractMeetingCode() {
+    const pathname = window.location.pathname;
+    const match = pathname.match(/\/([a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{3})/i);
+    return match ? match[1] : '';
+  }
+
+  function getElapsedMs() {
+    if (!firstStartedAtMs) return 0;
+    const now = isPaused && pauseStartedAtMs ? pauseStartedAtMs : Date.now();
+    const rawElapsed = now - firstStartedAtMs - totalPausedMs + manualOffsetMs;
+    return Math.max(0, rawElapsed);
+  }
+
+  function detectMeetInternalStartTimeMs() {
+    try {
+      const timeOrigin = window.performance.timeOrigin || Date.now();
+      const resources = performance.getEntriesByType("resource") || [];
+      const marks = performance.getEntriesByType("mark") || [];
+
+      let candidateMs = null;
+
+      for (const res of resources) {
+        if (res.name && (res.name.includes("MeetingSpaceService") || res.name.includes("Sync") || res.name.includes("channel") || res.name.includes("google.rtc") || res.name.includes("meet"))) {
+          const startTimeMs = timeOrigin + res.startTime;
+          if (!candidateMs || startTimeMs < candidateMs) {
+            candidateMs = startTimeMs;
+          }
+        }
+      }
+
+      for (const mark of marks) {
+        if (mark.name && (mark.name.includes("join") || mark.name.includes("meeting") || mark.name.includes("start"))) {
+          const markTimeMs = timeOrigin + mark.startTime;
+          if (!candidateMs || markTimeMs < candidateMs) {
+            candidateMs = markTimeMs;
+          }
+        }
+      }
+
+      if (candidateMs && candidateMs <= Date.now()) {
+        return candidateMs;
+      }
+
+      if (resources.length > 0) {
+        const earliest = Math.min(...resources.map(r => r.startTime));
+        if (timeOrigin + earliest <= Date.now()) {
+          return timeOrigin + earliest;
+        }
+      }
+
+      return timeOrigin <= Date.now() ? timeOrigin : Date.now();
+    } catch (e) {
+      return Date.now();
+    }
+  }
+
+  function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return [
+      hrs.toString().padStart(2, '0'),
+      mins.toString().padStart(2, '0'),
+      secs.toString().padStart(2, '0')
+    ].join(':');
+  }
+
+  function saveCallState() {
+    if (!currentMeetingCode) return;
+    const stateKey = `meet_timer_state_${currentMeetingCode}`;
+    const data = {
+      meetingCode: currentMeetingCode,
+      firstStartedAtMs,
+      totalPausedMs,
+      manualOffsetMs,
+      isPaused,
+      pauseStartedAtMs,
+      lastUpdatedMs: Date.now()
+    };
+    chrome.storage.local.set({ [stateKey]: data });
+    saveCallToHistory();
+  }
+
+  function saveCallToHistory() {
+    if (!currentMeetingCode) return;
+    const durationSeconds = Math.floor(getElapsedMs() / 1000);
+    chrome.storage.local.get(['callHistory'], (res) => {
+      let history = res.callHistory || [];
+      const existingIdx = history.findIndex(h => h.code === currentMeetingCode);
+      const entry = {
+        id: currentMeetingCode,
+        code: currentMeetingCode,
+        date: new Date().toISOString(),
+        durationSeconds: durationSeconds
+      };
+      if (existingIdx >= 0) {
+        history[existingIdx] = entry;
+      } else {
+        history.unshift(entry);
+      }
+      chrome.storage.local.set({ callHistory: history });
+    });
+  }
+
+  function loadCallState(code, callback) {
+    const stateKey = `meet_timer_state_${code}`;
+    chrome.storage.local.get([stateKey, 'settings', 'customX', 'customY'], (res) => {
+      if (res.settings) {
+        settings = Object.assign(settings, res.settings);
+      }
+      const saved = res[stateKey];
+      if (saved && (Date.now() - saved.lastUpdatedMs < EXPIRATION_WINDOW_MS)) {
+        firstStartedAtMs = saved.firstStartedAtMs || Date.now();
+        totalPausedMs = saved.totalPausedMs || 0;
+        manualOffsetMs = saved.manualOffsetMs || 0;
+        isPaused = !!saved.isPaused;
+        pauseStartedAtMs = saved.pauseStartedAtMs || null;
+      } else {
+        firstStartedAtMs = detectMeetInternalStartTimeMs();
+        totalPausedMs = 0;
+        manualOffsetMs = 0;
+        isPaused = false;
+        pauseStartedAtMs = null;
+      }
+      saveCallState();
+      if (callback) callback(res.customX, res.customY);
+    });
+  }
+
+  function makeDraggable(element) {
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+
+    element.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button, input, select, textarea, .gm-timer-drawer')) {
+        return;
+      }
+
+      isDragging = true;
+      element.classList.add('dragging');
+      element.setPointerCapture(e.pointerId);
+
+      const rect = element.getBoundingClientRect();
+      element.style.left = rect.left + 'px';
+      element.style.top = rect.top + 'px';
+      element.style.bottom = 'auto';
+      element.style.right = 'auto';
+      element.style.transform = 'none';
+
+      startX = e.clientX;
+      startY = e.clientY;
+      initialLeft = rect.left;
+      initialTop = rect.top;
+    });
+
+    element.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      element.style.left = (initialLeft + dx) + 'px';
+      element.style.top = (initialTop + dy) + 'px';
+    });
+
+    const stopDrag = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      element.classList.remove('dragging');
+      try {
+        element.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
+      const rect = element.getBoundingClientRect();
+      const customX = rect.left;
+      const customY = rect.top;
+      chrome.storage.local.set({ customX, customY });
+    };
+
+    element.addEventListener('pointerup', stopDrag);
+    element.addEventListener('pointercancel', stopDrag);
+  }
+
+  function createWidget(customX, customY) {
+    if (widgetElement) {
+      widgetElement.remove();
+      widgetElement = null;
+    }
+
+    if (!settings.showOverlay) return;
+
+    widgetElement = document.createElement('div');
+    widgetElement.id = 'gm-duration-timer-widget';
+    widgetElement.className = settings.position || 'top-center';
+
+    const statusDot = document.createElement('span');
+    statusDot.id = 'gm-timer-status-dot';
+    statusDot.className = 'gm-status-dot';
+
+    const timerDisplay = document.createElement('span');
+    timerDisplay.id = 'gm-timer-display';
+    timerDisplay.className = 'gm-timer-display';
+    timerDisplay.textContent = '00:00:00';
+
+    const editBtn = document.createElement('button');
+    editBtn.id = 'gm-timer-edit-btn';
+    editBtn.className = 'gm-icon-btn';
+    editBtn.title = 'Adjust timer';
+    editBtn.textContent = '✎';
+
+    drawerElement = document.createElement('div');
+    drawerElement.id = 'gm-timer-drawer';
+    drawerElement.className = 'gm-timer-drawer';
+    drawerElement.style.display = 'none';
+
+    drawerElement.innerHTML = `
+      <div class="gm-drawer-quick-btns">
+        <button data-delta="-300000">-5m</button>
+        <button data-delta="-60000">-1m</button>
+        <button data-delta="60000">+1m</button>
+        <button data-delta="300000">+5m</button>
+        <button data-delta="900000">+15m</button>
+      </div>
+      <div class="gm-drawer-inputs">
+        <input type="number" class="gm-input-hh" min="0" max="99" placeholder="HH" value="00"> :
+        <input type="number" class="gm-input-mm" min="0" max="59" placeholder="MM" value="00"> :
+        <input type="number" class="gm-input-ss" min="0" max="59" placeholder="SS" value="00">
+        <button class="gm-btn-set-time">Set</button>
+      </div>
+    `;
+
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = drawerElement.style.display === 'none';
+      drawerElement.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden) {
+        const elapsed = getElapsedMs();
+        const totalSecs = Math.floor(elapsed / 1000);
+        const hh = Math.floor(totalSecs / 3600);
+        const mm = Math.floor((totalSecs % 3600) / 60);
+        const ss = totalSecs % 60;
+        drawerElement.querySelector('.gm-input-hh').value = String(hh).padStart(2, '0');
+        drawerElement.querySelector('.gm-input-mm').value = String(mm).padStart(2, '0');
+        drawerElement.querySelector('.gm-input-ss').value = String(ss).padStart(2, '0');
+      }
+    });
+
+    drawerElement.querySelectorAll('.gm-drawer-quick-btns button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const delta = parseInt(btn.getAttribute('data-delta'), 10);
+        if (!isNaN(delta)) {
+          manualOffsetMs += delta;
+          saveCallState();
+          updateTimerDisplay();
+        }
+      });
+    });
+
+    const setBtn = drawerElement.querySelector('.gm-btn-set-time');
+    setBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const hh = parseInt(drawerElement.querySelector('.gm-input-hh').value || '0', 10);
+      const mm = parseInt(drawerElement.querySelector('.gm-input-mm').value || '0', 10);
+      const ss = parseInt(drawerElement.querySelector('.gm-input-ss').value || '0', 10);
+      const targetMs = (hh * 3600 + mm * 60 + ss) * 1000;
+      const now = isPaused && pauseStartedAtMs ? pauseStartedAtMs : Date.now();
+      manualOffsetMs = targetMs - (now - firstStartedAtMs - totalPausedMs);
+      saveCallState();
+      updateTimerDisplay();
+      drawerElement.style.display = 'none';
+    });
+
+    widgetElement.appendChild(statusDot);
+    widgetElement.appendChild(timerDisplay);
+    widgetElement.appendChild(editBtn);
+    widgetElement.appendChild(drawerElement);
+
+    if (typeof customX === 'number' && typeof customY === 'number') {
+      widgetElement.style.left = customX + 'px';
+      widgetElement.style.top = customY + 'px';
+      widgetElement.style.right = 'auto';
+      widgetElement.style.bottom = 'auto';
+      widgetElement.style.transform = 'none';
+    }
+
+    document.body.appendChild(widgetElement);
+    makeDraggable(widgetElement);
+  }
+
+  function updateTimerDisplay() {
+    if (!widgetElement) return;
+
+    const elapsedMs = getElapsedMs();
+    const formatted = formatTime(elapsedMs);
+
+    const display = widgetElement.querySelector('#gm-timer-display');
+    if (display) display.textContent = formatted;
+
+    const dot = widgetElement.querySelector('#gm-timer-status-dot');
+    if (dot) {
+      if (isPaused) {
+        dot.className = 'gm-status-dot paused';
+      } else {
+        const warnMs = (settings.warnMinutes || 60) * 60 * 1000;
+        if (elapsedMs >= warnMs && warnMs > 0) {
+          dot.className = 'gm-status-dot overtime';
+          if (settings.soundAlert && !hasChimedOvertime) {
+            playChimeSound();
+            hasChimedOvertime = true;
+          }
+        } else {
+          dot.className = 'gm-status-dot';
+        }
+      }
+    }
+  }
+
+  function playChimeSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch (e) {}
+  }
+
+  function init() {
+    currentMeetingCode = extractMeetingCode();
+    if (!currentMeetingCode) return;
+
+    loadCallState(currentMeetingCode, (customX, customY) => {
+      createWidget(customX, customY);
+      updateTimerDisplay();
+    });
+
+    setInterval(() => {
+      const newCode = extractMeetingCode();
+      if (newCode && newCode !== currentMeetingCode) {
+        currentMeetingCode = newCode;
+        loadCallState(currentMeetingCode, (customX, customY) => {
+          createWidget(customX, customY);
+        });
+      }
+      updateTimerDisplay();
+      if (!isPaused) {
+        saveCallState();
+      }
+    }, 1000);
+  }
+
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === 'GET_STATUS') {
+      sendResponse({
+        meetingCode: currentMeetingCode,
+        elapsedMs: getElapsedMs(),
+        isPaused: isPaused,
+        firstStartedAtMs: firstStartedAtMs,
+        totalPausedMs: totalPausedMs,
+        manualOffsetMs: manualOffsetMs,
+        settings: settings
+      });
+      return true;
+    }
+
+    if (msg.action === 'PAUSE') {
+      if (!isPaused) {
+        isPaused = true;
+        pauseStartedAtMs = Date.now();
+        saveCallState();
+        updateTimerDisplay();
+      }
+      sendResponse({ status: 'ok', isPaused });
+      return true;
+    }
+
+    if (msg.action === 'RESUME') {
+      if (isPaused) {
+        if (pauseStartedAtMs) {
+          totalPausedMs += Date.now() - pauseStartedAtMs;
+        }
+        isPaused = false;
+        pauseStartedAtMs = null;
+        saveCallState();
+        updateTimerDisplay();
+      }
+      sendResponse({ status: 'ok', isPaused });
+      return true;
+    }
+
+    if (msg.action === 'RESET') {
+      firstStartedAtMs = Date.now();
+      totalPausedMs = 0;
+      manualOffsetMs = 0;
+      isPaused = false;
+      pauseStartedAtMs = null;
+      hasChimedOvertime = false;
+      saveCallState();
+      updateTimerDisplay();
+      sendResponse({ status: 'ok' });
+      return true;
+    }
+
+    if (msg.action === 'SYNC_MEET_START') {
+      firstStartedAtMs = detectMeetInternalStartTimeMs();
+      totalPausedMs = 0;
+      manualOffsetMs = 0;
+      isPaused = false;
+      pauseStartedAtMs = null;
+      hasChimedOvertime = false;
+      saveCallState();
+      updateTimerDisplay();
+      sendResponse({ status: 'ok', firstStartedAtMs });
+      return true;
+    }
+
+    if (msg.action === 'ADJUST_OFFSET') {
+      if (typeof msg.deltaMs === 'number') {
+        manualOffsetMs += msg.deltaMs;
+        saveCallState();
+        updateTimerDisplay();
+      }
+      sendResponse({ status: 'ok', manualOffsetMs });
+      return true;
+    }
+
+    if (msg.action === 'SET_EXACT_TIME') {
+      if (typeof msg.totalSeconds === 'number') {
+        const targetMs = msg.totalSeconds * 1000;
+        const now = isPaused && pauseStartedAtMs ? pauseStartedAtMs : Date.now();
+        manualOffsetMs = targetMs - (now - firstStartedAtMs - totalPausedMs);
+        saveCallState();
+        updateTimerDisplay();
+      }
+      sendResponse({ status: 'ok', manualOffsetMs });
+      return true;
+    }
+
+    if (msg.action === 'SETTINGS_UPDATED') {
+      if (msg.settings) {
+        settings = Object.assign(settings, msg.settings);
+        chrome.storage.local.get(['customX', 'customY'], (res) => {
+          createWidget(res.customX, res.customY);
+          updateTimerDisplay();
+        });
+      }
+      sendResponse({ status: 'ok' });
+      return true;
+    }
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();ion () {
   let firstStartedAtMs = Date.now();
   let totalPausedMs = 0;
   let manualOffsetMs = 0;
