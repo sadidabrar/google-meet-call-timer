@@ -2,87 +2,84 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Meet Call Timer</title>
+  <title>Google Meet Call Timer</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="popup-body">
   <div class="container">
     <header class="header">
-      <h1 class="title">⏱ Meet Call Timer</h1>
-      <span id="status-badge" class="badge">Inactive</span>
+      <h1 class="title">⏱ Google Meet Call Timer</h1>
+      <span id="callStatusBadge" class="status-badge">Not In Call</span>
     </header>
 
-    <section class="card">
-      <div class="card-header">
-        <span class="card-title">Live Call</span>
-        <span id="meeting-code" class="meeting-code">---</span>
-      </div>
-      <div id="live-time" class="live-timer">00:00:00</div>
+    <div class="display-section">
+      <div id="meetingCode" class="meeting-code">Code: ---</div>
+      <div id="timerDisplay" class="timer-large">00:00:00</div>
       <div class="btn-group">
-        <button id="pause-btn" class="btn primary">Pause</button><button id="sync-meet-btn" class="btn secondary">⚡ Sync Meet Start</button>
-        <button id="reset-btn" class="btn danger">Reset (00:0:00)</button>
+        <button id="pauseBtn" class="btn btn-primary">Pause</button>
+        <button id="syncBtn" class="btn btn-secondary">⚡ Sync Meet Start</button>
+        <button id="resetBtn" class="btn btn-danger">Reset</button>
       </div>
-    </section>
+    </div>
 
-    <section class="card">
-      <h2 class="card-title">Manually Adjust Timer</h2>
-      <div class="offset-buttons">
-        <button class="btn offset-btn" data-delta="-300000">-5m</button>
-        <button class="btn offset-btn" data-delta="-60000">-1m</button>
-        <button class="btn offset-btn" data-delta="60000">+1m</button>
-        <button class="btn offset-btn" data-delta="300000">+5m</button>
-        <button class="btn offset-btn" data-delta="900000">+15m</button>
+    <div class="section">
+      <h2 class="section-title">Manually Adjust Timer</h2>
+      <div class="quick-offsets">
+        <button data-delta="-300000">-5m</button>
+        <button data-delta="-60000">-1m</button>
+        <button data-delta="60000">+1m</button>
+        <button data-delta="300000">+5m</button>
+        <button data-delta="900000">+15m</button>
       </div>
-      <div class="exact-time-inputs">
-        <input type="number" id="set-hh" min="0" max="99" placeholder="HH" value="0">
-        <span>:</span>
-        <input type="number" id="set-mm" min="0" max="59" placeholder="MM" value="00">
-        <span>:</span>
-        <input type="number" id="set-ss" min="0" max="59" placeholder="SS" value="00">
-        <button id="set-exact-btn" class="btn secondary">Set Time</button>
+      <div class="time-inputs">
+        <input type="number" id="inputHh" min="0" max="99" placeholder="HH" value="00"> :
+      
+        <input type="number" id="inputMm" min="0" max="59" placeholder="MM" value="00"> :
+        <input type="number" id="inputSs" min="0" max="59" placeholder="SS" value="00">
+        <button id="setTimeBtn" class="btn btn-primary" style="padding: 4px 10px;">Set Time</button>
       </div>
-    </section>
+    </div>
 
-    <section class="card">
-      <h2 class="card-title">Overlay & Alert Settings</h2>
-      <div class="setting-row">
-        <label for="toggle-overlay">
-          <input type="checkbox" id="toggle-overlay" checked>
-          Show in-call floating badge
-        </label>
+    <div class="section">
+      <h2 class="section-title">Overlay & Alert Settings</h2>
+      <div class="form-group">
+        <label for="showOverlay">Show in-call floating badge</label>
+        <input type="checkbox" id="showOverlay" checked>
       </div>
-      <div class="setting-row">
-        <label for="select-position">Default badge position:</label>
-        <select id="select-position">
-          <option value="top-left">top-left</option>
-          <option value="top-right" selected>top-right</option>
-          <option value="bottom-left">bottom-left</option>
-          <option value="bottom-right">bottom-right</option>
+      <div class="form-group">
+        <label for="position">Badge position</label>
+        <select id="position">
+          <option value="top-center">Top-Middle (Default)</option>
+          <option value="top-left">Top-Left</option>
+          <option value="top-right">Top-Right</option>
+          <option value="bottom-left">Bottom-Left</option>
+          <option value="bottom-right">Bottom-Right</option>
         </select>
       </div>
-      <div class="setting-row">
-        <label for="warn-minutes">Overtime alert (minutes):</label>
-        <input type="number" id="warn-minutes" min="1" max="999" value="60">
+      <div class="form-group">
+        <label for="warnMinutes">Overtime alert (minutes)</label>
+        <input type="number" id="warnMinutes" min="1" max="600" value="60" style="width: 50px;">
       </div>
-      <div class="setting-row">
-        <label for="toggle-sound">
-          <input type="checkbox" id="toggle-sound">
-          Play sound chime on overtime
-        </label>
+      <div class="form-group">
+        <label for="soundAlert">Play sound chime on overtime</label>
+        <input type="checkbox" id="soundAlert">
       </div>
-    </section>
+    </div>
 
-    <section class="card">
-      <div class="card-header">
-        <h2 class="card-title">Recent Calls History</h2>
-        <div class="history-actions">
-          <button id="export-csv" class="btn small">Export CSV</button>
-          <button id="clear-history" class="btn small danger">Clear</button>
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 class="section-title">Recent Calls</h2>
+        <div style="display: flex; gap: 4px;">
+          <button id="exportCsvBtn" class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;">Export CSV</button>
+          <button id="clearHistoryBtn" class="btn btn-danger" style="padding: 2px 6px; font-size: 10px;">Clear</button>
         </div>
       </div>
-      <div id="history-list" class="history-list"></div>
-    </section>
+      <div id="callHistoryList" class="history-list">
+        <div style="font-size: 11px; color: #9aa0a6; text-align: center; padding: 8px;">No recent call records</div>
+      </div>
+    </div>
   </div>
+
   <script src="popup.js"></script>
 </body>
-      width: 220
+</html>
