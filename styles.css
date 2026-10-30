@@ -1,4 +1,5 @@
-/* Pop/* Popup & Widget Styles */
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Mono:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+
 body.popup-body {
   width: 348px;
   margin: 0;
@@ -753,3 +754,39 @@ body.popup-body {
   font-size: 11px;
   padding: 2px;
 }
+
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #004a77;
+  color: #c2e7ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.update-banner.hidden {
+  display: none;
+}
+.update-banner-text {
+  flex: 1;
+}
+.update-banner-btn {
+  color: #c2e7ff;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}
+.update-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #9aa0a6;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #3c4043;
+}
+
