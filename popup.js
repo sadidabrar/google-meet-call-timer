@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const callHistoryList = document.getElementById('callHistoryList');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
   const exportCsvBtn = document.getElementById('exportCsvBtn');
-
+  const checkUpdateBtn = document.getElementById('checkUpdateBtn');
   function sendToActiveTab(action, payload = {}, callback) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs && tabs[0]) {
@@ -174,6 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+
+  if (checkUpdateBtn) {
+    checkUpdateBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ type: "CHECK_FOR_UPDATES" });
+    });
+  }
   loadSettings();
   renderHistory();
 });
