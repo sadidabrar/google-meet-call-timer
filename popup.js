@@ -1,163 +1,146 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const liveTimeEl = document.getElementById('live-time');
-  const meetingCodeEl = document.getElementById('meeting-code');
-  const statusBadgeEl = document.getElementById('status-badge');
-  const pauseBtn = document.getElementById('pause-btn');
-  const resetBtn = document.getElementById('reset-btn');const syncMeetBtn = document.getElementById('sync-meet-btn');
+  const callStatusBadge = document.getElementById('callStatusBadge');
+  const meetingCode = document.getElementById('meetingCode');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const syncBtn = document.getElementById('syncBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const quickOffsetBtns = document.querySelectorAll('.quick-offsets button[data-delta]');
+  const inputHh = document.getElementById('inputHh');
+  const inputMm = document.getElementById('inputMm');
+  const inputSs = document.getElementById('inputSs');
+  const setTimeBtn = document.getElementById('setTimeBtn');
+  const showOverlay = document.getElementById('showOverlay');
+  const position = document.getElementById('position');
+  const warnMinutes = document.getElementById('warnMinutes');
+  const soundAlert = document.getElementById('soundAlert');
+  const callHistoryList = document.getElementById('callHistoryList');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
 
-  const setHhEl = document.getElementById('set-hh');
-  const setMmEl = document.getElementById('set-mm');
-  const setSsEl = document.getElementById('set-ss');
-  const setExactBtn = document.getElementById('set-exact-btn');
-
-  const toggleOverlayEl = document.getElementById('toggle-overlay');
-  const selectPositionEl = document.getElementById('select-position');
-  const warnMinutesEl = document.getElementById('warn-minutes');
-  const toggleSoundEl = document.getElementById('toggle-sound');
-
-  const exportCsvBtn = document.getElementById('export-csv');
-  const clearHistoryBtn = document.getElementById('clear-history');
-  const historyListEl = document.getElementById('history-list');
-
-  function sendToActiveTab(message, responseCallback) {
+  function sendToActiveTab(action, payload = {}, callback) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs && tabs[0] && tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-          if (chrome.runtime.lastError) {
-            if (responseCallback) responseCallback(null);
-          } else {
-            if (responseCallback) responseCallback(response);
-          }
+      if (tabs && tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action, ...payload }, (res) => {
+          if (chrome.runtime.lastError) {}
+          if (callback) callback(res);
         });
-      } else {
-        if (responseCallback) responseCallback(null);
       }
     });
   }
 
-  function pollStatus() {
-    sendToActiveTab({ action: 'GET_STATUS' }, (res) => {
-      if (res) {
-        if (meetingCodeEl) meetingCodeEl.textContent = res.meetingCode || '---';
-        if (liveTimeEl) liveTimeEl.textContent = res.formattedTime || res.timeStr || '00:00:00';
-        if (statusBadgeEl) {
-          if (res.isPaused) {
-            statusBadgeEl.textContent = 'Paused';
-            statusBadgeEl.className = 'badge warning';
-          } else if (res.isActive) {
-            statusBadgeEl.textContent = 'Active';
-            statusBadgeEl.className = 'badge active';
-          } else {
-            statusBadgeEl.textContent = 'Inactive';
-            statusBadgeEl.className = 'badge';
-          }
-        }
-        if (pauseBtn) {
-          pauseBtn.textContent = res.isPaused ? 'Resume' : 'Pause';
-        }
-      } else {
-        if (meetingCodeEl) meetingCodeEl.textContent = '---';
-        if (liveTimeEl) liveTimeEl.textContent = '00:00:00';
-        if (statusBadgeEl) {
-          statusBadgeEl.textContent = 'Inactive';
-          statusBadgeEl.className = 'badge';
-        }
-        if (pauseBtn) pauseBtn.textContent = 'Pause';
+  function updateStatus() {
+    sendToActiveTab('GET_STATUS', {}, (res) => {
+      if (!res) return;
+      if (callStatusBadge) {
+        callStatusBadge.textContent = res.inCall ? 'In Call' : (res.status || 'Not in call');
+      }
+      if (meetingCode) {
+        meetingCode.textContent = res.meetingCode || res.code || 'N/A';
+      }
+      if (timerDisplay) {
+        timerDisplay.textContent = res.formattedTime || res.timeString || '00:00:00';
+      }
+      if (pauseBtn) {
+        pauseBtn.textContent = res.isPaused ? 'Resume' : 'Pause';
       }
     });
   }
 
-  setInterval(pollStatus, 1000);
-  pollStatus();
+  updateStatus();
+  setInterval(updateStatus, 1000);
 
   if (pauseBtn) {
     pauseBtn.addEventListener('click', () => {
-      sendToActiveTab({ action: 'TOGGLE_PAUSE' }, () => pollStatus());
+      sendToActiveTab('TOGGLE_PAUSE', {}, updateStatus);
+    });
+  }
+
+  if (syncBtn) {
+    syncBtn.addEventListener('click', () => {
+      sendToActiveTab('SYNC_MEET_START', {}, updateStatus);
     });
   }
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      sendToActiveTab({ action: 'RESET_TIMER' }, () => pollStatus());
+      sendToActiveTab('RESET_TIMER', {}, updateStatus);
     });
-  if (syncMeetBtn) { syncMeetBtn.addEventListener('click', () => { sendToActiveTab({ action: 'SYNC_MEET_START' }, () => pollStatus()); }); }}
+  }
 
-  const offsetBtns = document.querySelectorAll('.offset-btn');
-  offsetBtns.forEach((btn) => {
+  quickOffsetBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      const deltaMs = parseInt(btn.getAttribute('data-delta'), 10);
-      if (!isNaN(deltaMs)) {
-        sendToActiveTab({ action: 'ADJUST_OFFSET', deltaMs }, () => pollStatus());
-      }
+      const deltaMs = parseInt(btn.getAttribute('data-delta'), 10) || 0;
+      sendToActiveTab('ADJUST_OFFSET', { deltaMs }, updateStatus);
     });
   });
 
-  if (setExactBtn) {
-    setExactBtn.addEventListener('click', () => {
-      const hh = parseInt(setHhEl ? setHhEl.value : 0, 10) || 0;
-      const mm = parseInt(setMmEl ? setMmEl.value : 0, 10) || 0;
-      const ss = parseInt(setSsEl ? setSsEl.value : 0, 10) || 0;
-      const targetMs = (hh * 3600 + mm * 60 + ss) * 1000;
-      sendToActiveTab({ action: 'SET_EXACT_TIME', targetMs }, () => pollStatus());
+  if (setTimeBtn) {
+    setTimeBtn.addEventListener('click', () => {
+      const hh = parseInt(inputHh ? inputHh.value : 0, 10) || 0;
+      const mm = parseInt(inputMm ? inputMm.value : 0, 10) || 0;
+      const ss = parseInt(inputSs ? inputSs.value : 0, 10) || 0;
+      const totalSeconds = hh * 3600 + mm * 60 + ss;
+      const targetMs = totalSeconds * 1000;
+      sendToActiveTab('SET_EXACT_TIME', { totalSeconds, targetMs }, updateStatus);
     });
   }
 
   function loadSettings() {
-    chrome.storage.local.get('gm_timer_settings', (data) => {
-      const settings = data.gm_timer_settings || {
-        showOverlay: true,
-        position: 'top-right',
-        warnMinutes: 60,
-        soundAlert: false
-      };
-      if (toggleOverlayEl) toggleOverlayEl.checked = settings.showOverlay !== false;
-      if (selectPositionEl) selectPositionEl.value = settings.position || 'top-right';
-      if (warnMinutesEl) warnMinutesEl.value = settings.warnMinutes || 60;
-      if (toggleSoundEl) toggleSoundEl.checked = !!settings.soundAlert;
+    chrome.storage.local.get(['gm_timer_settings'], (res) => {
+      const settings = res.gm_timer_settings || {};
+      if (showOverlay && settings.showOverlay !== undefined) {
+        showOverlay.checked = !!settings.showOverlay;
+      }
+      if (position && settings.position) {
+        position.value = settings.position;
+      }
+      if (warnMinutes && settings.warnMinutes !== undefined) {
+        warnMinutes.value = settings.warnMinutes;
+      }
+      if (soundAlert && settings.soundAlert !== undefined) {
+        soundAlert.checked = !!settings.soundAlert;
+      }
     });
   }
 
-  function saveAndBroadcastSettings() {
+  function saveSettings() {
     const settings = {
-      showOverlay: toggleOverlayEl ? toggleOverlayEl.checked : true,
-      position: selectPositionEl ? selectPositionEl.value : 'top-right',
-      warnMinutes: parseInt(warnMinutesEl ? warnMinutesEl.value : 60, 10) || 60,
-      soundAlert: toggleSoundEl ? toggleSoundEl.checked : false
+      showOverlay: showOverlay ? showOverlay.checked : true,
+      position: position ? position.value : 'top-middle',
+      warnMinutes: warnMinutes ? parseInt(warnMinutes.value, 10) || 0 : 0,
+      soundAlert: soundAlert ? soundAlert.checked : false
     };
     chrome.storage.local.set({ gm_timer_settings: settings }, () => {
-      sendToActiveTab({ action: 'UPDATE_SETTINGS', settings });
+      sendToActiveTab('UPDATE_SETTINGS', { settings });
     });
   }
 
-  if (toggleOverlayEl) toggleOverlayEl.addEventListener('change', saveAndBroadcastSettings);
-  if (selectPositionEl) selectPositionEl.addEventListener('change', saveAndBroadcastSettings);
-  if (warnMinutesEl) warnMinutesEl.addEventListener('input', saveAndBroadcastSettings);
-  if (toggleSoundEl) toggleSoundEl.addEventListener('change', saveAndBroadcastSettings);
-
-  loadSettings();
+  [showOverlay, position, warnMinutes, soundAlert].forEach((el) => {
+    if (el) {
+      el.addEventListener('change', saveSettings);
+    }
+  });
 
   function renderHistory() {
-    if (!historyListEl) return;
-    chrome.storage.local.get('gm_timer_call_history', (data) => {
-      const history = data.gm_timer_call_history || [];
+    chrome.storage.local.get(['gm_timer_call_history'], (res) => {
+      const history = res.gm_timer_call_history || [];
+      if (!callHistoryList) return;
+      callHistoryList.innerHTML = '';
       if (history.length === 0) {
-        historyListEl.innerHTML = '<div class="history-empty">No recorded calls.</div>';
+        const li = document.createElement('li');
+        li.textContent = 'No past calls logged.';
+        callHistoryList.appendChild(li);
         return;
       }
-      historyListEl.innerHTML = history.map((item) => {
-        const code = item.meetingCode || item.code || 'Meet Call';
-        const date = item.date || item.startTime || new Date(item.timestamp || Date.now()).toLocaleString();
-        const duration = item.durationFormatted || item.duration || '00:00:00';
-        return `
-          <div class="history-item">
-            <div class="history-main">
-              <span class="history-code">${code}</span>
-              <span class="history-date">${date}</span>
-            </div>
-            <div class="history-duration">${duration}</div>
-          </div>
-        `;
-      }).join('');
+      history.forEach((item) => {
+        const li = document.createElement('li');
+        const code = item.code || item.meetingCode || 'N/A';
+        const duration = item.duration || item.formattedTime || '00:00:00';
+        const date = item.date || item.timestamp || '';
+        li.textContent = `${code} - ${duration} (${date})`;
+        callHistoryList.appendChild(li);
+      });
     });
   }
 
@@ -171,26 +154,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (exportCsvBtn) {
     exportCsvBtn.addEventListener('click', () => {
-      chrome.storage.local.get('gm_timer_call_history', (data) => {
-        const history = data.gm_timer_call_history || [];
-        let csv = 'Meeting Code,Date/Time,Duration\n';
+      chrome.storage.local.get(['gm_timer_call_history'], (res) => {
+        const history = res.gm_timer_call_history || [];
+        let csv = 'Meeting Code,Duration,Date\n';
         history.forEach((item) => {
-          const code = item.meetingCode || item.code || '';
-          const date = item.date || item.startTime || '';
-          const duration = item.durationFormatted || item.duration || '';
-          csv += `"${code}","${date}","${duration}"\n`;
+          const code = item.code || item.meetingCode || '';
+          const dur = item.duration || item.formattedTime || '';
+          const date = item.date || item.timestamp || '';
+          csv += `"${code}","${dur}","${date}"\n`;
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'meet_call_history.csv';
-        document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       });
     });
   }
 
+  loadSettings();
   renderHistory();
 });
