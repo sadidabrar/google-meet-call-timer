@@ -1,69 +1,40 @@
-# Google Meet Call Timer
+# 🎓 Google Meet Tuition Companion (v2.3.0)
 
 [![MIT License](assets/badge-license.svg)](LICENSE) [![Manifest V3](assets/badge-manifest.svg)](manifest.json)
 
-An open-source Manifest V3 Chrome Extension that displays a live, draggable call duration timer HUD directly inside Google Meet and tracks meeting duration history.
+An open-source Manifest V3 Chrome Extension that turns Google Meet into a complete tuition companion with auto-starting Material 3 timer, classroom management, dual-audio recording, and database sync.
 
 ![Google Meet Call Duration Timer Screenshot](assets/screenshot.svg)
 
-## Features
+## 🌟 Major Feature Pillars
 
-- **Live Call Duration Timer**: Real-time HUD overlay displayed directly inside your Google Meet interface.
-- **Draggable HUD**: Position the timer anywhere on your screen for optimal visibility during meetings.
-- **Meeting History Tracking**: Automatically logs meeting duration history accessible via extension popup.
-- **Manifest V3 Compliant**: Built with the modern Chrome extension architecture for security, reliability, and lightweight performance.
-- **Privacy-First**: Operates completely locally without sending any call data to external servers.
+### 1. Auto-Starting Material 3 Call Timer & Top-Middle Draggable HUD
+- Built with Google Sans typography and Google's Material 3 design system.
+- Top-center default placement with full-pill drag-and-drop functionality across the entire viewport.
+- Automatic injection on browser restart, 2-hour rejoin persistence, and mid-call start-time recovery.
+- Manual time adjustment controls (`-5m`, `-1m`, `+1m`, `+5m`, `+15m`, and exact `HH:MM:SS`).
 
-## Project File Structure
+### 2. 35-Minute Tuition Class Rule & 1 Hour 10 Minute Warning Alert
+- Calls reaching 35+ minutes automatically qualify as a Tuition Class (`Class #N`).
+- Multi-channel warning alert (red pill, in-call toast banner, 4-tone chime, and desktop notification) fires at 1 hour 10 minutes (70 minutes).
 
-| File | Description |
-| --- | --- |
-| `manifest.json` | Manifest V3 metadata, permissions, and script declarations |
-| `content.js` | Injected content script for Google Meet DOM timer overlay and dragging logic |
-| `popup.html` | Extension toolbar popup markup |
-| `popup.js` | History viewing, timer state script, and UI interactions |
-| `styles.css` | Styling for HUD overlay, theme, and popup UI |
-| `assets/screenshot.svg` | UI preview screenshot graphic |
+### 3. Custom Class Number Initialization & Monthly Auto-Counting
+- Initialize or fix `This Class #` or `Prior Classes (Mo)` for any meeting code if classes were already taken earlier in the month before installing the extension.
+- Automatically counts up for the rest of the month and resets to `Class #1` each new calendar month.
 
-## Installation Steps
+### 4. Classrooms Organizer & 1-Click Homework Mail Shortcut
+- Organize each Class Link with its Class Name, Students list, Typical Schedule, and Student Mails.
+- Includes a 1-click Join button and a 1-click Homework Mail shortcut that opens Gmail Compose pre-addressed to all students.
 
-1. **Clone or Download the Repository**:
-   Download or clone the project repository to your local computer.
-2. **Open Chrome Extensions Page**:
-   Navigate to the Chrome extensions manager in Google Chrome (`chrome://extensions`).
-3. **Enable Developer Mode**:
-   Toggle the **Developer mode** switch in the top-right corner.
-4. **Load Unpacked Extension**:
-   Click **Load unpacked** and select the root directory of this repository (`google-meet-call-timer`).
+### 5. Presentation-Focused Self-Recorder (Dual-Audio Video)
+- Auto-pins active presentations and records crisp WebM video.
+- Mixes both the user's microphone voice and all other participants' WebRTC voices.
+- Features a live 4-bar audio level meter directly on the HUD pill.
 
-## Usage Guide
-
-1. Join any Google Meet meeting.
-2. The timer overlay badge will automatically appear once you join the call.
-3. Drag the timer badge to any preferred location on the screen.
-4. Click the extension icon in the Chrome browser toolbar to view call history and manage timer settings.
-
-## Privacy & Permissions
-
-- **`storage`**: Used exclusively to store local call history logs and timer preferences on your browser.
-- **Host Permission**: Required solely to inject the HUD timer overlay into Google Meet call pages.
-- **No Data Collection**: No personal data, audio, video, or call content is recorded or transmitted.
-
-## Contributing
-
-Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines on reporting bugs, requesting features, and submitting pull requests.)
-
-An open-source Manifest V3 Chrome Extension that displays a live, draggable call duration timer HUD directly inside Google Meet and tracks meeting duration history.
-
-![Google Meet Call Duration Timer Screenshot](assets/screenshot.svg)
-
-## Features
-
-- **Live Call Duration Timer**: Real-time HUD overlay displayed directly inside your Google Meet interface.
-- **Draggable HUD**: Position the timer anywhere on your screen for optimal visibility during meetings.
-- **Meeting History Tracking**: Automatically logs meeting duration history accessible via extension popup.
-- **Manifest V3 Compliant**: Built with the modern Chrome extension architecture for security, reliability, and lightweight performance.
-- **Privacy-First**: Operates completely locally without sending any call data to external servers.
+### 6. Google Calendar & External Database Sync (Survives Extension Removal)
+- Auto-logs 35+ minute classes to Google Calendar.
+- Syncs two-way with Google Sheets (`Classrooms_Summary` and `Class_Sessions_Log`).
+- Saves directly to the local `Documents` folder and mirrors to Chrome account cloud storage to survive extension removal.
 
 ## Project File Structure
 
@@ -80,83 +51,7 @@ An open-source Manifest V3 Chrome Extension that displays a live, draggable call
 
 1. **Clone or Download the Repository**:
    Download or clone the project repository to your local computer.
-2. **Open Chrome Extensions Page**:
-   Navigate to the Chrome extensions manager in Google Chrome (`chrome://extensions`).
-3. **Enable Developer Mode**:
-   Toggle the **Developer mode** switch in the top-right corner.
-4. **Load Unpacked Extension**:
-   Click **Load unpacked** and select the root directory of this repository (`google-meet-call-timer`).
-
-## Usage Guide
-
-1. Join any Google Meet meeting.
-2. The timer overlay badge will automatically appear once you join the call.
-3. Drag the timer badge to any preferred location on the screen.
-4. Click the extension icon in the Chrome browser toolbar to view call history and manage timer settings.
-
-## Privacy & Permissions
-
-- **`storage`**: Used exclusively to store local call history logs and timer preferences on your browser.
-- **Host Permission**: Required solely to inject the HUD timer overlay into Google Meet call pages.
-- **No Data Collection**: No personal data, audio, video, or call content is recorded or transmitted.
-
-## Contributing
-
-Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines on reporting bugs, requesting features, and submitting pull requests.
-An open-source Manifest V3 Chrome Extension that displays a live, draggable call duration timer HUD directly inside Google Meet and tracks meeting duration history.
-
-![Preview](assets/screenshot.svg)
-
-## Features
-
-- **Live Call Duration Timer**: Real-time HUD overlay displayed directly inside your Google Meet interface.
-- **Draggable HUD**: Position the timer anywhere on your screen for optimal visibility during meetings.
-- **Meeting History Tracking**: Automatically logs meeting duration history accessible via extension popup.
-- **Manifest V3 Compliant**: Built with the modern Chrome extension architecture for security, reliability, and lightweight performance.
-- **Privacy-First**: Operates completely locally without sending any call data to external servers.
-
-## Project File Structure
-
-| File | Description |
-| --- | --- |
-| `manifest.json` | Manifest V3 metadata, permissions, and script declarations |
-| `content.js` | Injected content script for Google Meet DOM timer overlay and dragging logic |
-| `popup.html` | Extension toolbar popup markup |
-| `popup.js` | History viewing, timer state script, and UI interactions |
-| `styles.css` | Styling for HUD overlay, theme, and popup UI |
-| `assets/screenshot.svg` | UI preview screenshot graphic |
-
-## Installation Steps
-
-1. **Clone or Download the Repository**:
-   Download or clone the project repository to your local computer.
-2. **Open Chrome Extensions Page**:
-   Navigate to the Chrome extensions manager in Google Chrome (`chrome://extensions`).
-3. **Enable Developer Mode**:
-   Toggle the **Developer mode** switch in the top-right corner.
-4. **Load Unpacked Extension**:
-   Click **Load unpacked** and select the root directory of this repository (`google-meet-call-timer`).
-
-## Usage Guide
-
-1. Join any Google Meet meeting.
-2. The timer overlay badge will automatically appear once you join the call.
-3. Drag the timer badge to any preferred location on the screen.
-4. Click the extension icon in the Chrome browser toolbar to view call history and manage timer settings.
-
-## Privacy & Permissions
-
-- **`storage`**: Used exclusively to store local call history logs and timer preferences on your browser.
-- **Host Permission**: Required solely to inject the HUD timer overlay into Google Meet call pages.
-- **No Data Collection**: No personal data, audio, video, or call content is recorded or transmitted.
-
-## Contributing
-
-Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines on reporting bugs, requesting features, and submitting pull requests.
-
-## 👥 Contributors
-- **Sadid Abrar** (`@sadidabrar`) — Creator & Maintainer
-- **Gemini** — AI Collaborator & Co-Author (Extension architecture, Manifest V3 implementation, UI/UX design, and open-source documentation)
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
+2. **Open Chrome Extensions**:
+   Navigate to `chrome://extensions/` in Google Chrome and enable **Developer mode** in the top-right corner.
+3. **Load Unpacked Extension**:
+   Click **Load unpacked** and select the folder containing the extension source code.
