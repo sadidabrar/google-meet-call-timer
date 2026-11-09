@@ -1,14 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "Google Meet Call Duration Timer",
-  "version": "1.3.0",
-  "description": "Displays the live call duration in Google Meet",
+  "name": "Google Meet Tuition Companion",
+  "version": "2.3.0",
+  "description": "All-in-one Google Meet Tuition Companion: auto-starting class timer, Classroom Organizer, Homework Mailer, Dual-Audio Presentation Recorder, Calendar & Google Sheets DB sync.",
   "permissions": [
     "storage",
     "tabs",
-    "alarms"
+    "alarms",
+    "scripting",
+    "notifications",
+    "downloads"
   ],
-  "background": { "service_worker": "background.js" },
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html"
   },
