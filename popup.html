@@ -2,166 +2,128 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Google Meet Call Timer</title>
+  <title>Google Meet Tuition Companion</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="popup-body">
-  <div id="updateBanner" class="update-banner hidden">
-    <span id="updateBannerText">New update available!</span>
-    <a id="updateDownloadLink" href="#" target="_blank">Download Update</a>
-  </div>
-
   <div class="container">
     <header class="header">
-      <h1 class="title">⏱ Google Meet Call Timer</h1>
+      <h1 class="title">🎓 Google Meet Tuition Companion</h1>
       <span id="callStatusBadge" class="status-badge">Not In Call</span>
     </header>
 
-    <div class="display-section">
-      <div id="meetingCode" class="meeting-code">Code: ---</div>
-      <div id="timerDisplay" class="timer-large">00:00:00</div>
-      <div class="btn-group">
-        <button id="pauseBtn" class="btn btn-primary">Pause</button>
-        <button id="syncBtn" class="btn btn-secondary">⚡ Sync Meet Start</button>
-        <button id="resetBtn" class="btn btn-danger">Reset</button>
-      </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-live">⏱ Live</button>
+      <button class="nav-tab" data-tab="tab-classrooms">🏫 Classrooms</button>
+      <button class="nav-tab" data-tab="tab-tuitions">🎓 History</button>
+      <button class="nav-tab" data-tab="tab-settings">☁️ Sync & Rules</button>
     </div>
 
-    <div class="section">
-      <h2 class="section-title">Manually Adjust Timer</h2>
-      <div class="quick-offsets">
-        <button data-delta="-300000">-5m</button>
-        <button data-delta="-60000">-1m</button>
-        <button data-delta="60000">+1m</button>
-        <button data-delta="300000">+5m</button>
-      </div>
-      <div class="time-input-group">
-        <input type="number" id="inputHh" placeholder="HH" min="0" max="99">
-        <input type="number" id="inputMm" placeholder="MM" min="0" max="59">
-        <input type="number" id="inputSs" placeholder="SS" min="0" max="59">
-        <button id="setTimeBtn" class="btn btn-secondary">Set Time</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2 class="section-title">Overlay & Alert Settings</h2>
-      <div class="setting-item">
-        <label for="showOverlay">Show In-Meet Overlay</label>
-        <input type="checkbox" id="showOverlay" checked>
-      </div>
-      <div class="setting-item">
-        <label for="position">Overlay Position</label>
-        <select id="position">
-          <option value="top-left">Top Left</option>
-          <option value="top-middle">Top Middle</option>
-          <option value="top-right">Top Right</option>
-          <option value="bottom-left">Bottom Left</option>
-          <option value="bottom-right">Bottom Right</option>
-        </select>
-      </div>
-      <div class="setting-item">
-        <label for="warnMinutes">Warning Alert (Minutes)</label>
-        <input type="number" id="warnMinutes" value="45" min="1">
-      </div>
-      <div class="setting-item">
-        <label for="soundAlert">Sound Warning</label>
-        <input type="checkbox" id="soundAlert">
-      </div>
-    </div>
-
-    <div class="section">
-      <h2 class="section-title">Call History</h2>
-      <ul id="callHistoryList" class="history-list"></ul>
-      <div class="history-actions">
-        <button id="clearHistoryBtn" class="btn btn-small">Clear History</button>
-        <button id="exportCsvBtn" class="btn btn-small">Export CSV</button>
-      </div>
-    </div>
-
-    <footer class="footer">
-      <span id="versionStatusText">v1.3.0 • Auto-update active</span>
-      <button id="checkUpdateBtn" class="btn btn-small">Check for updates</button>
-    </footer>
-  </div>
-  <script src="popup.js"></script>
-</body>
-</ht</html>l>stylesheet" href="styles.css">
-</head>
-<body class="popup-body">
-  <div class="container">
-    <header class="header">
-      <h1 class="title">⏱ Google Meet Call Timer</h1>
-      <span id="callStatusBadge" class="status-badge">Not In Call</span>
-    </header>
-
-    <div class="display-section">
-      <div id="meetingCode" class="meeting-code">Code: ---</div>
-      <div id="timerDisplay" class="timer-large">00:00:00</div>
-      <div class="btn-group">
-        <button id="pauseBtn" class="btn btn-primary">Pause</button>
-        <button id="syncBtn" class="btn btn-secondary">⚡ Sync Meet Start</button>
-        <button id="resetBtn" class="btn btn-danger">Reset</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2 class="section-title">Manually Adjust Timer</h2>
-      <div class="quick-offsets">
-        <button data-delta="-300000">-5m</button>
-        <button data-delta="-60000">-1m</button>
-        <button data-delta="60000">+1m</button>
-        <button data-delta="300000">+5m</button>
-        <button data-delta="900000">+15m</button>
-      </div>
-      <div class="time-inputs">
-        <input type="number" id="inputHh" min="0" max="99" placeholder="HH" value="00"> :
-      
-        <input type="number" id="inputMm" min="0" max="59" placeholder="MM" value="00"> :
-        <input type="number" id="inputSs" min="0" max="59" placeholder="SS" value="00">
-        <button id="setTimeBtn" class="btn btn-primary" style="padding: 4px 10px;">Set Time</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2 class="section-title">Overlay & Alert Settings</h2>
-      <div class="form-group">
-        <label for="showOverlay">Show in-call floating badge</label>
-        <input type="checkbox" id="showOverlay" checked>
-      </div>
-      <div class="form-group">
-        <label for="position">Badge position</label>
-        <select id="position">
-          <option value="top-center">Top-Middle (Default)</option>
-          <option value="top-left">Top-Left</option>
-          <option value="top-right">Top-Right</option>
-          <option value="bottom-left">Bottom-Left</option>
-          <option value="bottom-right">Bottom-Right</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="warnMinutes">Overtime alert (minutes)</label>
-        <input type="number" id="warnMinutes" min="1" max="600" value="60" style="width: 50px;">
-      </div>
-      <div class="form-group">
-        <label for="soundAlert">Play sound chime on overtime</label>
-        <input type="checkbox" id="soundAlert">
-      </div>
-    </div>
-
-    <div class="section">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 class="section-title">Recent Calls</h2>
-        <div style="display: flex; gap: 4px;">
-          <button id="exportCsvBtn" class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;">Export CSV</button>
-          <button id="clearHistoryBtn" class="btn btn-danger" style="padding: 2px 6px; font-size: 10px;">Clear</button>
+    <div id="tab-live" class="tab-content active">
+      <div class="display-section">
+        <div class="info-row">
+          <span id="meetingCode">Code: ---</span>
+          <span id="liveClassCountChip" class="chip">Class #1</span>
+        </div>
+        <div id="timerDisplay" class="timer-large">00:00:00</div>
+        <div class="btn-group">
+          <button id="pauseBtn" class="btn btn-primary">Pause</button>
+          <button id="recQuickBtn" class="btn btn-action">⏺ Record</button>
+          <button id="hwQuickBtn" class="btn btn-action">✉️ Homework Mail</button>
+          <button id="calQuickBtn" class="btn btn-action">📅 Calendar</button>
+          <button id="resetBtn" class="btn btn-danger">Reset</button>
         </div>
       </div>
-      <div id="callHistoryList" class="history-list">
-        <div style="font-size: 11px; color: #9aa0a6; text-align: center; padding: 8px;">No recent call records</div>
+
+      <div class="section">
+        <h3>Active Classroom & Starting Class #</h3>
+        <div class="form-grid">
+          <input type="text" id="profileLabelInput" placeholder="Class Name">
+          <label>This Class #: <input type="number" id="profileCurrentClassNumInput" min="1" value="1"></label>
+          <input type="text" id="profileStudentsInput" placeholder="Students">
+          <input type="text" id="profileScheduleInput" placeholder="Schedule">
+          <input type="text" id="profileEmailsInput" placeholder="Student Emails">
+          <button id="saveProfileBtn" class="btn btn-primary">Save Active Profile</button>
+          <span id="saveProfileStatus"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Manual Timer Adjustment</h3>
+        <div class="quick-offsets">
+          <button class="offset-btn" data-minutes="-5">-5m</button>
+          <button class="offset-btn" data-minutes="-1">-1m</button>
+          <button class="offset-btn" data-minutes="1">+1m</button>
+          <button class="offset-btn" data-minutes="5">+5m</button>
+          <button class="offset-btn" data-minutes="15">+15m</button>
+        </div>
+        <div class="time-inputs">
+          <input type="number" id="inputHh" placeholder="HH" min="0" max="23">
+          <input type="number" id="inputMm" placeholder="MM" min="0" max="59">
+          <input type="number" id="inputSs" placeholder="SS" min="0" max="59">
+          <button id="setTimeBtn" class="btn">Set Time</button>
+          <button id="syncBtn" class="btn btn-secondary">Sync</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-classrooms" class="tab-content" style="display:none;">
+      <div class="section">
+        <h3>Add / Edit Classroom</h3>
+        <div class="form-grid">
+          <input type="text" id="roomLinkInput" placeholder="Meet Link / Code">
+          <label>Prior Classes (Mo): <input type="number" id="roomInitialOffsetInput" min="0" value="0"></label>
+          <input type="text" id="roomNameInput" placeholder="Class Name">
+          <input type="text" id="roomScheduleInput" placeholder="Schedule">
+          <input type="text" id="roomStudentsInput" placeholder="Students">
+          <input type="text" id="roomEmailsInput" placeholder="Student Emails">
+          <button id="saveClassroomBtn" class="btn btn-primary">Save Classroom</button>
+          <span id="roomSaveStatus"></span>
+        </div>
+      </div>
+      <div class="section">
+        <h3>Saved Classrooms</h3>
+        <div id="classroomList"></div>
+      </div>
+    </div>
+
+    <div id="tab-tuitions" class="tab-content" style="display:none;">
+      <div class="kpi-container">
+        <div class="kpi-box"><span id="kpiMonthClasses">0</span><label>This Month</label></div>
+        <div class="kpi-box"><span id="kpiTotalClasses">0</span><label>Total Classes</label></div>
+        <div class="kpi-box"><span id="kpiTotalHours">0.0h</span><label>Total Hours</label></div>
+      </div>
+      <div class="section">
+        <div class="action-bar">
+          <button id="exportCsvBtn" class="btn">Export CSV</button>
+          <button id="exportJsonBtn" class="btn">Export JSON</button>
+        </div>
+        <div id="tuitionCodeList"></div>
+      </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content" style="display:none;">
+      <div class="section">
+        <h3>External DB Sync</h3>
+        <input type="text" id="googleSheetsUrl" placeholder="Google Sheets Web App URL">
+        <div class="btn-group">
+          <button id="pushSheetsBtn" class="btn">☁️ Sync to Sheet</button>
+          <button id="pullSheetsBtn" class="btn">📥 Restore from Sheet</button>
+          <button id="saveDiskNowBtn" class="btn">💾 Save DB to Disk</button>
+          <button id="importJsonBtn" class="btn">Import JSON</button>
+          <input type="file" id="importJsonFileInput" accept=".json" style="display:none;">
+        </div>
+      </div>
+      <div class="section">
+        <h3>Rules & Automation</h3>
+        <label>Min Class Minutes: <input type="number" id="minClassMinutes" value="35"></label><br>
+        <label>Warn Minutes: <input type="number" id="warnMinutes" value="70"></label><br>
+        <label><input type="checkbox" id="autoRecordClass" checked> Auto Record Class</label><br>
+        <label><input type="checkbox" id="autoFocusPresentation" checked> Auto Focus Presentation</label><br>
+        <label><input type="checkbox" id="autoOpenCalendarTab" checked> Auto Open Calendar Tab</label>
       </div>
     </div>
   </div>
-
   <script src="popup.js"></script>
 </body>
 </html>
