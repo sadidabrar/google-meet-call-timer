@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Meet Tuition Companion",
-  "version": "2.3.0",
+  "version": "2.3.10",
   "description": "All-in-one Google Meet Tuition Companion: auto-starting class timer, Classroom Organizer, Homework Mailer, Dual-Audio Presentation Recorder, Calendar & Google Sheets DB sync.",
   "permissions": [
     "storage",
