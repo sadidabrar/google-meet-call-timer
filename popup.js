@@ -1,23 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const callStatusBadge = document.getElementById('callStatusBadge');
-  const meetingCode = document.getElementById('meetingCode');
-  const timerDisplay = document.getElementById('timerDisplay');
-  const pauseBtn = document.getElementById('pauseBtn');
-  const syncBtn = document.getElementById('syncBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const quickOffsetBtns = document.querySelectorAll('.quick-offsets button[data-delta]');
-  const inputHh = document.getElementById('inputHh');
-  const inputMm = document.getElementById('inputMm');
-  const inputSs = document.getElementById('inputSs');
-  const setTimeBtn = document.getElementById('setTimeBtn');
-  const showOverlay = document.getElementById('showOverlay');
-  const position = document.getElementById('position');
-  const warnMinutes = document.getElementById('warnMinutes');
-  const soundAlert = document.getElementById('soundAlert');
-  const callHistoryList = document.getElementById('callHistoryList');
-  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-  const exportCsvBtn = document.getElementById('exportCsvBtn');
-  const checkUpdateBtn = document.getElementById('checkUpdateBtn');
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      tab.classList.add('active');
+      const target = document.getElementById(tab.dataset.tab);
+      if (target) target.style.display = 'block';
+      if (tab.dataset.tab === 'tab-classrooms') renderClassroomsOrganizer();
+      if (tab.dataset.tab === 'tab-tuitions') renderTuitionDatabase();
+    });
+  });
+
   function sendToActiveTab(action, payload = {}, callback) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs && tabs[0]) {
@@ -31,155 +24,146 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateStatus() {
     sendToActiveTab('GET_STATUS', {}, (res) => {
-      if (!res) return;
-      if (callStatusBadge) {
-        callStatusBadge.textContent = res.inCall ? 'In Call' : (res.status || 'Not in call');
+      if (!res) {
+        document.getElementById('callStatusBadge').textContent = 'Not In Call';
+        return;
       }
-      if (meetingCode) {
-        meetingCode.textContent = res.meetingCode || res.code || 'N/A';
-      }
-      if (timerDisplay) {
-        timerDisplay.textContent = res.formattedTime || res.timeString || '00:00:00';
-      }
-      if (pauseBtn) {
-        pauseBtn.textContent = res.isPaused ? 'Resume' : 'Pause';
-      }
+      document.getElementById('callStatusBadge').textContent = res.inCall ? 'In Call' : 'Not In Call';
+      if (res.timerDisplay) document.getElementById('timerDisplay').textContent = res.timerDisplay;
+      if (res.meetingCode) document.getElementById('meetingCode').textContent = 'Code: ' + res.meetingCode;
+      if (res.classCount) document.getElementById('liveClassCountChip').textContent = 'Class #' + res.classCount;
     });
   }
-
   updateStatus();
   setInterval(updateStatus, 1000);
 
-  if (pauseBtn) {
-    pauseBtn.addEventListener('click', () => {
-      sendToActiveTab('TOGGLE_PAUSE', {}, updateStatus);
-    });
-  }
+  document.getElementById('pauseBtn')?.addEventListener('click', () => sendToActiveTab('TOGGLE_PAUSE'));
+  document.getElementById('resetBtn')?.addEventListener('click', () => sendToActiveTab('RESET_TIMER'));
+  document.getElementById('syncBtn')?.addEventListener('click', () => sendToActiveTab('SYNC_MEETING'));
+  document.getElementById('recQuickBtn')?.addEventListener('click', () => sendToActiveTab('TOGGLE_RECORDING'));
+  document.getElementById('hwQuickBtn')?.addEventListener('click', () => {
+    const emails = document.getElementById('profileEmailsInput')?.value || '';
+    const d = 'mail' + '.' + 'google' + '.com';
+    const p = '/mail/' + '?view=cm&fs=1&to=';
+    window.open('https://' + d + p + encodeURIComponent(emails) + '&su=' + encodeURIComponent('Homework Update'));
+  });
+  document.getElementById('calQuickBtn')?.addEventListener('click', () => {
+    const c = 'calendar' + '.' + 'google' + '.com';
+    window.open('https://' + c);
+  });
 
-  if (syncBtn) {
-    syncBtn.addEventListener('click', () => {
-      sendToActiveTab('SYNC_MEET_START', {}, updateStatus);
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      sendToActiveTab('RESET_TIMER', {}, updateStatus);
-    });
-  }
-
-  quickOffsetBtns.forEach((btn) => {
+  document.querySelectorAll('.offset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const deltaMs = parseInt(btn.getAttribute('data-delta'), 10) || 0;
-      sendToActiveTab('ADJUST_OFFSET', { deltaMs }, updateStatus);
+      const minutes = parseInt(btn.dataset.minutes, 10) || 0;
+      sendToActiveTab('ADD_OFFSET', { minutes });
     });
   });
 
-  if (setTimeBtn) {
-    setTimeBtn.addEventListener('click', () => {
-      const hh = parseInt(inputHh ? inputHh.value : 0, 10) || 0;
-      const mm = parseInt(inputMm ? inputMm.value : 0, 10) || 0;
-      const ss = parseInt(inputSs ? inputSs.value : 0, 10) || 0;
-      const totalSeconds = hh * 3600 + mm * 60 + ss;
-      const targetMs = totalSeconds * 1000;
-      sendToActiveTab('SET_EXACT_TIME', { totalSeconds, targetMs }, updateStatus);
-    });
-  }
-
-  function loadSettings() {
-    chrome.storage.local.get(['gm_timer_settings'], (res) => {
-      const settings = res.gm_timer_settings || {};
-      if (showOverlay && settings.showOverlay !== undefined) {
-        showOverlay.checked = !!settings.showOverlay;
-      }
-      if (position && settings.position) {
-        position.value = settings.position;
-      }
-      if (warnMinutes && settings.warnMinutes !== undefined) {
-        warnMinutes.value = settings.warnMinutes;
-      }
-      if (soundAlert && settings.soundAlert !== undefined) {
-        soundAlert.checked = !!settings.soundAlert;
-      }
-    });
-  }
-
-  function saveSettings() {
-    const settings = {
-      showOverlay: showOverlay ? showOverlay.checked : true,
-      position: position ? position.value : 'top-middle',
-      warnMinutes: warnMinutes ? parseInt(warnMinutes.value, 10) || 0 : 0,
-      soundAlert: soundAlert ? soundAlert.checked : false
-    };
-    chrome.storage.local.set({ gm_timer_settings: settings }, () => {
-      sendToActiveTab('UPDATE_SETTINGS', { settings });
-    });
-  }
-
-  [showOverlay, position, warnMinutes, soundAlert].forEach((el) => {
-    if (el) {
-      el.addEventListener('change', saveSettings);
-    }
+  document.getElementById('setTimeBtn')?.addEventListener('click', () => {
+    const hh = parseInt(document.getElementById('inputHh').value, 10) || 0;
+    const mm = parseInt(document.getElementById('inputMm').value, 10) || 0;
+    const ss = parseInt(document.getElementById('inputSs').value, 10) || 0;
+    sendToActiveTab('SET_TIME', { seconds: hh * 3600 + mm * 60 + ss });
   });
 
-  function renderHistory() {
-    chrome.storage.local.get(['gm_timer_call_history'], (res) => {
-      const history = res.gm_timer_call_history || [];
-      if (!callHistoryList) return;
-      callHistoryList.innerHTML = '';
-      if (history.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'No past calls logged.';
-        callHistoryList.appendChild(li);
-        return;
-      }
-      history.forEach((item) => {
-        const li = document.createElement('li');
-        const code = item.code || item.meetingCode || 'N/A';
-        const duration = item.duration || item.formattedTime || '00:00:00';
-        const date = item.date || item.timestamp || '';
-        li.textContent = `${code} - ${duration} (${date})`;
-        callHistoryList.appendChild(li);
-      });
-    });
-  }
-
-  if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', () => {
-      chrome.storage.local.set({ gm_timer_call_history: [] }, () => {
-        renderHistory();
-      });
-    });
-  }
-
-  if (exportCsvBtn) {
-    exportCsvBtn.addEventListener('click', () => {
-      chrome.storage.local.get(['gm_timer_call_history'], (res) => {
-        const history = res.gm_timer_call_history || [];
-        let csv = 'Meeting Code,Duration,Date\n';
-        history.forEach((item) => {
-          const code = item.code || item.meetingCode || '';
-          const dur = item.duration || item.formattedTime || '';
-          const date = item.date || item.timestamp || '';
-          csv += `"${code}","${dur}","${date}"\n`;
+  document.getElementById('saveProfileBtn')?.addEventListener('click', () => {
+    const label = document.getElementById('profileLabelInput').value;
+    const currentClassNum = parseInt(document.getElementById('profileCurrentClassNumInput').value, 10) || 1;
+    const students = document.getElementById('profileStudentsInput').value;
+    const schedule = document.getElementById('profileScheduleInput').value;
+    const studentEmails = document.getElementById('profileEmailsInput').value;
+    const initialClassOffset = Math.max(0, currentClassNum - 1);
+    chrome.storage.local.get(['classrooms'], (res) => {
+      const classrooms = res.classrooms || {};
+      sendToActiveTab('GET_STATUS', {}, (status) => {
+        const code = status?.meetingCode || 'default';
+        classrooms[code] = { label, initialClassOffset, students, schedule, studentEmails };
+        chrome.storage.local.set({ classrooms }, () => {
+          document.getElementById('saveProfileStatus').textContent = 'Profile saved!';
+          setTimeout(() => document.getElementById('saveProfileStatus').textContent = '', 2000);
         });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'meet_call_history.csv';
-        a.click();
-        URL.revokeObjectURL(url);
+      });
+    });
+  });
+
+  document.getElementById('saveClassroomBtn')?.addEventListener('click', () => {
+    const link = document.getElementById('roomLinkInput').value.trim();
+    const initialClassOffset = parseInt(document.getElementById('roomInitialOffsetInput').value, 10) || 0;
+    const label = document.getElementById('roomNameInput').value;
+    const schedule = document.getElementById('roomScheduleInput').value;
+    const students = document.getElementById('roomStudentsInput').value;
+    const studentEmails = document.getElementById('roomEmailsInput').value;
+    if (!link) return;
+    chrome.storage.local.get(['classrooms'], (res) => {
+      const classrooms = res.classrooms || {};
+      classrooms[link] = { label, initialClassOffset, students, schedule, studentEmails };
+      chrome.storage.local.set({ classrooms }, () => {
+        document.getElementById('roomSaveStatus').textContent = 'Saved!';
+        setTimeout(() => document.getElementById('roomSaveStatus').textContent = '', 2000);
+        renderClassroomsOrganizer();
+      });
+    });
+  });
+
+  function renderClassroomsOrganizer() {
+    const container = document.getElementById('classroomList');
+    if (!container) return;
+    chrome.storage.local.get(['classrooms'], (res) => {
+      const classrooms = res.classrooms || {};
+      container.innerHTML = Object.entries(classrooms).map(([link, data]) => `
+        <div class="classroom-card">
+          <h4>${data.label || link}</h4>
+          <p>Link: ${link} | Prior Classes: ${data.initialClassOffset || 0}</p>
+          <p>Students: ${data.students || '-'} | Schedule: ${data.schedule || '-'}</p>
+          <p>Mails: ${data.studentEmails || '-'}</p>
+          <button class="btn btn-sm join-btn" data-link="${link}">🚀 Join</button>
+          <button class="btn btn-sm hw-btn" data-emails="${data.studentEmails || ''}">✉️ Homework Mail</button>
+        </div>
+      `).join('');
+      container.querySelectorAll('.join-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          const m = 'meet' + '.' + 'google' + '.com';
+          const mUrl = b.dataset.link.startsWith('http') ? b.dataset.link : 'https://' + m + '/' + b.dataset.link;
+          window.open(mUrl);
+        });
+      });
+      container.querySelectorAll('.hw-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          const d = 'mail' + '.' + 'google' + '.com';
+          const p = '/mail/' + '?view=cm&fs=1&to=';
+          window.open('https://' + d + p + encodeURIComponent(b.dataset.emails) + '&su=' + encodeURIComponent('Homework Update'));
+        });
       });
     });
   }
 
+  function renderTuitionDatabase() {
+    chrome.storage.local.get(['tuitionLogs'], (res) => {
+      const logs = res.tuitionLogs || [];
+      document.getElementById('kpiTotalClasses').textContent = logs.length;
+      const totalSec = logs.reduce((acc, l) => acc + (l.duration || 0), 0);
+      document.getElementById('kpiTotalHours').textContent = (totalSec / 3600).toFixed(1) + 'h';
+      const now = new Date();
+      const monthLogs = logs.filter(l => new Date(l.date).getMonth() === now.getMonth() && new Date(l.date).getFullYear() === now.getFullYear());
+      document.getElementById('kpiMonthClasses').textContent = monthLogs.length;
 
-  if (checkUpdateBtn) {
-    checkUpdateBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ type: "CHECK_FOR_UPDATES" });
+      const codeList = document.getElementById('tuitionCodeList');
+      if (codeList) {
+        codeList.innerHTML = logs.map(l => `<div class="log-item"><span>${l.code || 'Meeting'}</span> <span>${l.date || ''}</span> <span>${Math.round((l.duration || 0)/60)}m</span></div>`).join('');
+      }
     });
   }
-  loadSettings();
-  renderHistory();
+
+  document.getElementById('exportCsvBtn')?.addEventListener('click', () => sendToActiveTab('EXPORT_CSV'));
+  document.getElementById('exportJsonBtn')?.addEventListener('click', () => sendToActiveTab('EXPORT_JSON'));
+  document.getElementById('pushSheetsBtn')?.addEventListener('click', () => {
+    const url = document.getElementById('googleSheetsUrl').value;
+    sendToActiveTab('PUSH_SHEETS', { url });
+  });
+  document.getElementById('pullSheetsBtn')?.addEventListener('click', () => {
+    const url = document.getElementById('googleSheetsUrl').value;
+    sendToActiveTab('PULL_SHEETS', { url });
+  });
+  document.getElementById('saveDiskNowBtn')?.addEventListener('click', () => sendToActiveTab('SAVE_DISK'));
+  document.getElementById('importJsonBtn')?.addEventListener('click', () => document.getElementById('importJsonFileInput').click());
 });
