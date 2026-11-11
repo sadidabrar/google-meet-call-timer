@@ -11,7 +11,7 @@
   let settings = {
     showOverlay: true,
     position: 'top-center',
-    warnMinutes: 60,
+    warnMinutes: 70, minClassMinutes: 35,
     soundAlert: false
   };
 
@@ -248,7 +248,8 @@
         <input type="number" class="gm-input-mm" min="0" max="59" placeholder="MM" value="00"> :
         <input type="number" class="gm-input-ss" min="0" max="59" placeholder="SS" value="00">
         <button class="gm-btn-set-time">Set</button>
-      </div>
+      </div>    <div class="gm-drawer-extra" style="display:flex;align-items:center;gap:6px;margin-top:6px;"><label style="font-size:11px;">This Class #:</label><input type="number" id="gm-inline-class-num" value="1" min="1" style="width:40px;"><button class="gm-icon-btn" id="gm-hw-mail-btn" title="Homework Mail">✉️</button><button class="gm-icon-btn" id="gm-dual-rec-btn" title="Dual-Audio Recorder">⏺</button></div>
+      
     `;
 
     editBtn.addEventListener('click', (e) => {
