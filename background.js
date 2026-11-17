@@ -65,14 +65,27 @@ function compareVersions(v1, v2) {
   }
   return 0;
 }
+// Extension Action Icon
+function ensureExtensionActionIcon() {
+  if (typeof OffscreenCanvas === 'undefined' || !chrome.action?.setIcon) return;
+  const imageData = {}; for (const size of [16, 32, 48, 128]) {
+    const canvas = new OffscreenCanvas(size, size); const ctx = canvas.getContext('2d'); if (!ctx) continue; const c = size / 2; const r = size * 0.45;
+    ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.fillStyle = '#0f172a'; ctx.fill(); ctx.lineWidth = Math.max(1, size * 0.08); ctx.strokeStyle = '#2563eb'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(c, c + size * 0.06, size * 0.28, 0, Math.PI * 2); ctx.fillStyle = '#1e293b'; ctx.fill(); ctx.lineWidth = Math.max(1, size * 0.05); ctx.strokeStyle = '#3b82f6'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(c, c + size * 0.06); ctx.lineTo(c, c - size * 0.1); ctx.moveTo(c, c + size * 0.06); ctx.lineTo(c + size * 0.13, c + size * 0.12); ctx.strokeStyle = '#f8fafc'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(c, c - size * 0.36); ctx.lineTo(c + size * 0.26, c - size * 0.24); ctx.lineTo(c, c - size * 0.12); ctx.lineTo(c - size * 0.26, c - size * 0.24); ctx.closePath(); ctx.fillStyle = '#3b82f6'; ctx.fill();
+    ctx.fillRect(c - size * 0.12, c - size * 0.16, size * 0.24, size * 0.06); imageData[size] = ctx.getImageData(0, 0, size, size); }
+  chrome.action.setIcon({ imageData });
+}
+ensureExtensionActionIcon();
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('checkUpdateAlarm', { periodInMinutes: 180 });
-  checkForUpdates();
+  checkForUpdates(); ensureExtensionActionIcon();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  checkForUpdates();
+  checkForUpdates(); ensureExtensionActionIcon();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
