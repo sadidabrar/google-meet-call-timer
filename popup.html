@@ -1,155 +1,837 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
   <title>Google Meet Tuition Companion</title>
-  <link rel="stylesheet" href="styles.css">
   <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { width: 400px; background: #202124; color: #e8eaed; font-family: "Google Sans", "Segoe UI", Roboto, sans-serif; font-size: 12.5px; padding: 12px; }
-.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #3c4043; }
-.brand, h1, h2, h3 { font-size: 13.5px; font-weight: 600; color: #e8eaed; margin-bottom: 6px; } .header .title { font-size: 14px; white-space: nowrap; margin-bottom: 0; }
-.badge, #callStatusBadge { font-size: 11px; padding: 3px 10px; border-radius: 999px; background: #303134; color: #81c995; font-weight: 500; white-space: nowrap; }
-.nav-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; width: 100%; overflow: hidden; background: #28292c; padding: 4px; border-radius: 999px; border: 1px solid #3c4043; margin-bottom: 10px; }
-.nav-tab { background: transparent; color: #9aa0a6; border: none; border-radius: 999px; padding: 6px 4px !important; font-size: 11px !important; font-weight: 500; cursor: pointer; white-space: nowrap; text-align: center; width: 100% !important; min-width: 0; }
-.nav-tab.active { background: rgba(138,180,248,0.18); color: #8ab4f8; font-weight: 600; }
-.tab-pane, .tab-content { display: none !important; }
-.tab-pane.active, .tab-content.active { display: block !important; }
-.card { background: #28292c; border: 1px solid #3c4043; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
-.live-card { text-align: center; background: #303134; }
-#timerDisplay, .live-time { font-family: ui-monospace, "Roboto Mono", monospace; font-size: 30px; font-weight: 700; color: #fff; margin: 6px 0 10px; letter-spacing: 1px; }
-.btn-row { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 6px !important; margin-top: 8px !important; } .btn-group { display: flex !important; flex-wrap: nowrap !important; justify-content: center !important; gap: 5px !important; margin-top: 8px !important; } .btn-group button, .btn-group .btn { width: auto !important; flex: 0 1 auto !important; padding: 6px 9px !important; font-size: 11px !important; border-radius: 9999px !important; white-space: nowrap !important; } #pauseBtn, #calQuickBtn { background: rgba(138, 180, 248, 0.16) !important; color: #8ab4f8 !important; border: 1px solid rgba(138, 180, 248, 0.35) !important; } #recQuickBtn { background: rgba(242, 139, 130, 0.16) !important; color: #f28b82 !important; border: 1px solid rgba(242, 139, 130, 0.35) !important; } #hwQuickBtn { background: rgba(129, 201, 149, 0.16) !important; color: #81c995 !important; border: 1px solid rgba(129, 201, 149, 0.35) !important; } #resetBtn { background: #3c4043 !important; color: #e8eaed !important; border: 1px solid #5f6368 !important; } .quick-offsets { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 5px !important; margin-top: 8px !important; margin-bottom: 6px !important; } .quick-offsets button { width: 100% !important; padding: 6px 4px !important; font-size: 11px !important; } .time-inputs { display: flex !important; align-items: center !important; gap: 6px !important; } .time-inputs input { flex: 1 !important; min-width: 0 !important; margin-bottom: 0 !important; text-align: center; } .time-inputs button { width: auto !important; flex: none !important; white-space: nowrap !important; } .form-row { display: flex !important; align-items: center !important; gap: 6px !important; margin-bottom: 6px !important; } .form-row input { flex: 1 !important; min-width: 0 !important; margin-bottom: 0 !important; } .form-row .inline-label { white-space: nowrap !important; font-size: 11px !important; color: #9aa0a6; flex: none !important; } #profileCurrentClassNumInput, #roomInitialOffsetInput { width: 54px !important; flex: none !important; text-align: center !important; } button.btn-save { width: auto !important; flex: none !important; padding: 6px 14px !important; border-radius: 9999px !important; background: #8ab4f8 !important; color: #202124 !important; font-weight: 600 !important; white-space: nowrap !important; }
-button, .btn { width: auto !important; height: auto !important; border-radius: 999px !important; padding: 6px 12px !important; font-size: 11.5px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; }
-button:hover { background: #4d5156; border-color: #8ab4f8; }
-#saveProfileBtn, #saveClassroomBtn, #setTimeBtn { background: #8ab4f8; color: #202124; font-weight: 600; border: none; }
-input, select { width: 100% !important; background: #202124 !important; color: #e8eaed !important; border: 1px solid #5f6368 !important; border-radius: 8px !important; padding: 6px 8px !important; margin-bottom: 6px !important; }
-input:focus, select:focus { border-color: #8ab4f8; }
-input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: #8ab4f8; }
-.profile-form-row, .manual-set-row, .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
-.profile-form-row input, .manual-set-row input { margin-bottom: 0; }
-.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
-.kpi-box { background: #303134; border: 1px solid #3c4043; border-radius: 10px; padding: 8px; text-align: center; }
+    :root {
+      --gm-bg: #202124;
+      --gm-surface: #28292c;
+      --gm-surface-elevated: #303134;
+      --gm-pill-gray: #3c4043;
+      --gm-pill-hover: #4d5156;
+      --gm-border: #3c4043;
+      --gm-text-primary: #e8eaed;
+      --gm-text-secondary: #9aa0a6;
+      --gm-blue: #8ab4f8;
+      --gm-blue-hover: #aecbfa;
+      --gm-blue-tonal: rgba(138, 180, 248, 0.16);
+      --gm-green: #81c995;
+      --gm-green-tonal: rgba(129, 201, 149, 0.16);
+      --gm-amber: #fdd663;
+      --gm-amber-tonal: rgba(253, 214, 99, 0.16);
+      --gm-red: #ea4335;
+      --gm-red-light: #f28b82;
+      --gm-purple: #c58af9;
+      --gm-purple-tonal: rgba(197, 138, 249, 0.16);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 415px;
+      background: var(--gm-bg);
+      color: var(--gm-text-primary);
+      font-family: "Google Sans", "Google Sans Text", Roboto, Arial, sans-serif;
+      font-size: 13px;
+      padding: 12px 14px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .brand-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--gm-blue-tonal);
+      color: var(--gm-blue);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+    .title { font-size: 14px; font-weight: 500; color: var(--gm-text-primary); }
+    .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--gm-green-tonal);
+      color: var(--gm-green);
+      font-weight: 500;
+    }
+    .badge.paused { background: var(--gm-amber-tonal); color: var(--gm-amber); }
+    .badge.inactive { background: var(--gm-surface-elevated); color: var(--gm-text-secondary); }
+
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      background: var(--gm-surface);
+      padding: 4px;
+      border-radius: 9999px;
+      border: 1px solid var(--gm-border);
+      margin-bottom: 10px;
+    }
+    .nav-tab {
+      background: transparent;
+      color: var(--gm-text-secondary);
+      border: none;
+      border-radius: 9999px;
+      padding: 6px 4px;
+      font-size: 10.5px;
+      white-space: nowrap;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .nav-tab.active {
+      background: var(--gm-blue-tonal);
+      color: var(--gm-blue);
+      font-weight: 600;
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    .update-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(138, 180, 248, 0.14);
+      border: 1px solid var(--gm-blue);
+      border-radius: 12px;
+      padding: 7px 12px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .update-banner-btn {
+      background: var(--gm-blue);
+      color: #202124;
+      border: none;
+      border-radius: 9999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .card {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .live-card { text-align: center; padding: 12px 14px 14px; }
+    .meeting-code {
+      font-family: "Google Sans Mono", monospace;
+      font-size: 11px;
+      color: var(--gm-text-secondary);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .class-count-chip {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gm-blue);
+      background: var(--gm-blue-tonal);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      margin-bottom: 6px;
+    }
+    .live-time {
+      font-family: "Google Sans Mono", monospace;
+      font-size: 34px;
+      font-weight: 600;
+      color: var(--gm-text-primary);
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    button {
+      font-family: "Google Sans", Roboto, sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      padding: 5px 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      background: var(--gm-pill-gray);
+      color: var(--gm-text-primary);
+      white-space: nowrap;
+    }
+    button:hover { background: var(--gm-pill-hover); }
+    button.tonal-blue {
+      background: var(--gm-blue-tonal);
+      color: var(--gm-blue);
+      border-color: rgba(138, 180, 248, 0.3);
+    }
+    button.tonal-blue:hover { background: rgba(138, 180, 248, 0.28); }
+    button.tonal-green {
+      background: var(--gm-green-tonal);
+      color: var(--gm-green);
+      border-color: rgba(129, 201, 149, 0.3);
+    }
+    button.tonal-green:hover { background: rgba(129, 201, 149, 0.28); }
+    button.tonal-purple {
+      background: var(--gm-purple-tonal);
+      color: var(--gm-purple);
+      border-color: rgba(197, 138, 249, 0.3);
+    }
+    button.danger-pill {
+      background: rgba(234, 67, 53, 0.16);
+      color: var(--gm-red-light);
+      border-color: rgba(234, 67, 53, 0.3);
+    }
+    button.primary-solid {
+      background: var(--gm-blue);
+      color: #202124;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gm-text-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .profile-form-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    select {
+      background: var(--gm-surface-elevated);
+      border: 1px solid var(--gm-border);
+      color: var(--gm-text-primary);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-family: "Google Sans", Roboto, sans-serif;
+      outline: none;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--gm-blue);
+    }
+    .profile-form-row input { flex: 1; }
+    .quick-offsets {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+    .quick-offsets button {
+      padding: 4px 0;
+      font-size: 11px;
+      background: var(--gm-surface-elevated);
+      border: 1px solid var(--gm-border);
+      color: var(--gm-blue);
+      justify-content: center;
+    }
+    .manual-set-row { display: flex; align-items: center; gap: 5px; }
+    .manual-set-row input[type="number"] {
+      width: 48px;
+      background: var(--gm-surface-elevated);
+      border: 1px solid var(--gm-border);
+      color: var(--gm-text-primary);
+      border-radius: 8px;
+      padding: 4px 5px;
+      font-family: "Google Sans Mono", monospace;
+      font-size: 12px;
+      text-align: center;
+    }
+    .manual-set-row button { margin-left: auto; padding: 5px 12px; }
+
+    .classroom-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .classroom-card {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .classroom-head { display: flex; justify-content: space-between; align-items: flex-start; }
+    .classroom-name { font-size: 13px; font-weight: 600; color: var(--gm-text-primary); }
+    .classroom-link { font-family: "Google Sans Mono", monospace; font-size: 10px; color: var(--gm-blue); text-decoration: none; }
+    .classroom-meta { font-size: 11px; color: var(--gm-text-secondary); line-height: 1.35; }
+    .classroom-meta strong { color: var(--gm-text-primary); font-weight: 500; }
+    .classroom-hw-row { display: flex; gap: 5px; margin-top: 3px; }
+    .classroom-hw-row input {
+      flex: 1;
+      background: var(--gm-surface-elevated);
+      border: 1px solid var(--gm-border);
+      color: var(--gm-text-primary);
+      border-radius: 8px;
+      padding: 4px 7px;
+      font-size: 11px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .kpi-box {
+      background: var(--gm-surface-elevated);
+      border: 1px solid var(--gm-border);
+      border-radius: 12px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .kpi-val { font-family: "Google Sans Mono", monospace; font-size: 14px; font-weight: 600; color: var(--gm-blue); }
+    .kpi-lbl { font-size: 9.5px; color: var(--gm-text-secondary); margin-top: 2px; }
+
+    .code-Filter-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .code-Filter-row select,
+    .code-Filter-row input {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      color: var(--gm-text-primary);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-family: "Google Sans", Roboto, sans-serif;
+    }
+    .code-Filter-row input { flex: 1; }
+    .tuition-code-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .tuition-code-card {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .tuition-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .tuition-title { font-size: 13px; font-weight: 600; color: var(--gm-text-primary); }
+    .tuition-subcode { font-family: "Google Sans Mono", monospace; font-size: 11px; color: var(--gm-text-secondary); }
+    .cat-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: var(--gm-blue-tonal);
+      color: var(--gm-blue);
+      font-weight: 500;
+    }
+    .tuition-stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--gm-surface-elevated);
+      border-radius: 10px;
+      padding: 5px 9px;
+      font-size: 11px;
+      white-space: nowrap;
+      margin-bottom: 6px;
+    }
+    .classes-pill { color: var(--gm-green); font-weight: 600; font-size: 12px; }
+    .session-sublist {
+      border-top: 1px solid var(--gm-border);
+      padding-top: 6px;
+      margin-top: 6px;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .session-sublist.open { display: flex; }
+    .session-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--gm-text-secondary);
+      padding: 2px 0;
+    }
+    .cal-mini-link { color: var(--gm-blue); text-decoration: none; font-size: 10px; margin-left: 6px; }
+
+    /* Cloud Sync Hub Styles */
+    .cloud-card {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .cloud-status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--gm-surface-elevated);
+      border-radius: 12px;
+      border: 1px solid var(--gm-border);
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+    .cloud-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gm-text-secondary);
+    }
+    .status-dot.active { background: var(--gm-green); box-shadow: 0 0 6px rgba(129, 201, 149, 0.6); }
+    .status-dot.syncing { background: var(--gm-amber); }
+    .cloud-pills-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .cloud-pill-btn {
+      font-size: 10.5px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      background: var(--gm-surface-elevated);
+      color: var(--gm-blue);
+      text-decoration: none;
+      border: 1px solid var(--gm-border);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .cloud-pill-btn:hover { background: var(--gm-pill-hover); border-color: var(--gm-blue); }
+
+    .settings-list { display: flex; flex-direction: column; gap: 6px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; }
+    .setting-row input[type="number"],
+    .setting-row select {
+      background: var(--gm-surface-elevated);
+      border: 1px solid var(--gm-border);
+      color: var(--gm-text-primary);
+      border-radius: 8px;
+      padding: 3px 7px;
+      font-size: 11px;
+    }
+    .setting-row input[type="number"] { width: 58px; text-align: right; }
+
+    .text-btn { background: none; border: none; color: var(--gm-blue); padding: 2px 6px; font-size: 11px; cursor: pointer; }
+    .text-btn.danger { color: var(--gm-red-light); }
+    .empty-msg { color: var(--gm-text-secondary); font-size: 12px; text-align: center; padding: 14px 0; }
+    .update-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid var(--gm-border);
+      font-size: 11px;
+      color: var(--gm-text-secondary);
+    }
+
+    /* Invoice Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      border-radius: 18px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--gm-border);
+      padding-bottom: 8px;
+    }
+    .modal-title { font-size: 14px; font-weight: 600; color: var(--gm-blue); }
+    .close-modal-btn { background: none; border: none; color: var(--gm-text-secondary); font-size: 16px; cursor: pointer; }
+    .invoice-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+    .invoice-table th, .invoice-table td { padding: 4px 6px; border-bottom: 1px solid var(--gm-border); text-align: left; }
+    .invoice-table th { color: var(--gm-text-secondary); font-weight: 500; }
+    .invoice-total-box {
+      display: flex;
+      justify-content: space-between;
+      background: var(--gm-surface-elevated);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
   </style>
 </head>
-<body class="popup-body">
-  <div class="container">
-    <header class="header">
-      <h1 class="title">🎓 Google Meet Tuition Companion</h1>
-      <span id="callStatusBadge" class="status-badge">Not In Call</span>
-    </header>
-
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="tab-live">⏱ Live</button>
-      <button class="nav-tab" data-tab="tab-classrooms">🏫 Classrooms</button>
-      <button class="nav-tab" data-tab="tab-tuitions">🎓 History</button>
-      <button class="nav-tab" data-tab="tab-settings">☁️ Sync & Rules</button>
+<body>
+  <div class="header">
+    <div class="brand">
+      <span class="brand-icon">🎓</span>
+      <span class="title">Google Meet Tuition Companion</span>
     </div>
+    <span class="badge inactive" id="callStatusBadge">Idle</span>
+  </div>
 
-    <div id="tab-live" class="tab-content active">
-      <div class="display-section">
-        <div class="info-row">
-          <span id="meetingCode">Code: ---</span>
-          <span id="liveClassCountChip" class="chip">Class #1</span>
-        </div>
-        <div id="timerDisplay" class="timer-large">00:00:00</div>
-        <div class="btn-group">
-          <button id="pauseBtn" class="btn btn-primary">Pause</button>
-          <button id="recQuickBtn" class="btn btn-action">⏺ Record</button>
-          <button id="hwQuickBtn" class="btn btn-action">✉️ Homework</button>
-          <button id="calQuickBtn" class="btn btn-action">📅 Calendar</button>
-          <button id="resetBtn" class="btn btn-danger">Reset</button>
-        </div>
-      </div>
+  <div class="update-banner" id="updateBanner">
+    <span id="updateBannerText">Update available!</span>
+    <a class="update-banner-btn" id="updateDownloadLink" href="https://github.com/sadidabrar/google-meet-call-timer/releases/latest" target="_blank" rel="noopener noreferrer">Get Update</a>
+  </div>
 
-      <div class="section">
-        <h3>Active Classroom & Starting Class #</h3>
-        <div class="form-grid">
-          <div class="form-row"><input type="text" id="profileLabelInput" placeholder="Class Name">
-          <label class="inline-label">This Class #:</label><input type="number" id="profileCurrentClassNumInput" min="1" value="1"></div>
-          <div class="form-row"><input type="text" id="profileStudentsInput" placeholder="Students">
-          <input type="text" id="profileScheduleInput" placeholder="Schedule"></div>
-          <div class="form-row"><input type="text" id="profileEmailsInput" placeholder="Student Emails">
-          <button id="saveProfileBtn" class="btn btn-primary btn-save">Save Active Profile</button></div>
-          <span id="saveProfileStatus"></span>
-        </div>
-      </div>
+  <!-- 4 Navigation Tabs -->
+  <div class="nav-tabs">
+    <button type="button" class="nav-tab active" data-tab="tab-live">⏱ Live</button>
+    <button type="button" class="nav-tab" data-tab="tab-classrooms">🏫 Classrooms</button>
+    <button type="button" class="nav-tab" data-tab="tab-tuitions">🎓 History</button>
+    <button type="button" class="nav-tab" data-tab="tab-settings">☁️ Cloud Sync & Rules</button>
+  </div>
 
-      <div class="section">
-        <h3>Manual Timer Adjustment</h3>
-        <div class="quick-offsets">
-          <button class="offset-btn" data-minutes="-5">-5m</button>
-          <button class="offset-btn" data-minutes="-1">-1m</button>
-          <button class="offset-btn" data-minutes="1">+1m</button>
-          <button class="offset-btn" data-minutes="5">+5m</button>
-          <button class="offset-btn" data-minutes="15">+15m</button>
-        </div>
-        <div class="time-inputs">
-          <input type="number" id="inputHh" placeholder="HH" min="0" max="23">
-          <input type="number" id="inputMm" placeholder="MM" min="0" max="59">
-          <input type="number" id="inputSs" placeholder="SS" min="0" max="59">
-          <button id="setTimeBtn" class="btn">Set Time</button>
-          <button id="syncBtn" class="btn btn-secondary">Sync</button>
-        </div>
+  <!-- TAB 1: LIVE CALL TIMER & ACTIVE CLASSROOM SETTER -->
+  <div class="tab-pane active" id="tab-live">
+    <div class="card live-card">
+      <div class="meeting-code" id="meetingCode">No active Google Meet tab</div>
+      <div class="class-count-chip" id="liveClassCountChip">≥35m = 1 Class • Alert at 1h 10m</div>
+      <div class="live-time" id="timerDisplay">00:00:00</div>
+      <div class="btn-row">
+        <button id="pauseBtn" class="tonal-blue">⏸ Pause</button>
+        <button id="recQuickBtn" class="danger-pill" title="Record Class with Presentation + Your Mic + Students' Voices (.webm)">⏺ Record</button>
+        <button id="hwQuickBtn" class="tonal-green" title="Send Homework Email to Students of this Class">✉️ Homework</button>
+        <button id="calQuickBtn" class="tonal-blue" title="Add current session to Google Calendar">📅 Calendar</button>
+        <button id="resetBtn">↺ Reset</button>
       </div>
     </div>
 
-    <div id="tab-classrooms" class="tab-content" style="display:none;">
-      <div class="section">
-        <h3>Add / Edit Classroom</h3>
-        <div class="form-grid">
-          <div class="form-row"><input type="text" id="roomLinkInput" placeholder="Meet Link / Code">
-          <label class="inline-label">Prior Classes (Mo):</label><input type="number" id="roomInitialOffsetInput" min="0" value="0"></div>
-          <div class="form-row"><input type="text" id="roomNameInput" placeholder="Class Name">
-          <input type="text" id="roomScheduleInput" placeholder="Schedule"></div>
-          <div class="form-row"><input type="text" id="roomStudentsInput" placeholder="Students">
-          <input type="text" id="roomEmailsInput" placeholder="Student Emails">
-          <button id="saveClassroomBtn" class="btn btn-primary btn-save">Save Classroom</button></div>
-          <span id="roomSaveStatus"></span>
-        </div>
+    <!-- Active Classroom Info + Set Which Class # This Is -->
+    <div class="card">
+      <div class="section-title">
+        <span>Active Classroom & Starting Class #</span>
+        <span id="saveProfileStatus" style="color: var(--gm-green); font-size: 10px;"></span>
       </div>
-      <div class="section">
-        <h3>Saved Classrooms</h3>
-        <div id="classroomList"></div>
+      <div class="profile-form-row">
+        <input type="text" id="profileLabelInput" placeholder="Class Name (e.g. HSC Physics)" />
+        <span style="font-size: 11px; color: var(--gm-text-secondary); white-space: nowrap;">This Class #:</span>
+        <input type="number" id="profileCurrentClassNumInput" min="1" max="500" value="1" title="Set which Class # this session is for the current month (auto-counts from here!)" style="width: 54px; flex: none; text-align: center;" />
       </div>
-    </div>
-
-    <div id="tab-tuitions" class="tab-content" style="display:none;">
-      <div class="kpi-container">
-        <div class="kpi-box"><span id="kpiMonthClasses">0</span><label>This Month</label></div>
-        <div class="kpi-box"><span id="kpiTotalClasses">0</span><label>Total Classes</label></div>
-        <div class="kpi-box"><span id="kpiTotalHours">0.0h</span><label>Total Hours</label></div>
+      <div class="profile-form-row">
+        <input type="text" id="profileStudentsInput" placeholder="Students (e.g. Rahim, Karim)" />
+        <input type="text" id="profileScheduleInput" placeholder="Schedule (e.g. Sat/Mon 7PM)" />
       </div>
-      <div class="section">
-        <div class="action-bar">
-          <button id="exportCsvBtn" class="btn">Export CSV</button>
-          <button id="exportJsonBtn" class="btn">Export JSON</button>
-        </div>
-        <div id="tuitionCodeList"></div>
+      <div class="profile-form-row">
+        <input type="text" id="profileEmailsInput" placeholder="Student Mails (comma-separated)" />
+        <input type="number" id="profileFeeRateInput" placeholder="Fee ($)" min="0" step="any" style="width: 70px; flex: none; text-align: right;" title="Tuition fee per class or month" />
+        <button type="button" id="saveProfileBtn" class="primary-solid">Save</button>
       </div>
     </div>
 
-    <div id="tab-settings" class="tab-content" style="display:none;">
-      <div class="section">
-        <h3>External DB Sync</h3>
-        <input type="text" id="googleSheetsUrl" placeholder="Google Sheets Web App URL">
-        <div class="btn-group">
-          <button id="pushSheetsBtn" class="btn">☁️ Sync to Sheet</button>
-          <button id="pullSheetsBtn" class="btn">📥 Restore from Sheet</button>
-          <button id="saveDiskNowBtn" class="btn">💾 Save DB to Disk</button>
-          <button id="importJsonBtn" class="btn">Import JSON</button>
-          <input type="file" id="importJsonFileInput" accept=".json" style="display:none;">
-        </div>
+    <!-- Manual Timer Adjustment -->
+    <div class="card">
+      <div class="section-title">
+        <span>Manually Adjust Timer</span>
+        <button type="button" class="text-btn" id="syncBtn" title="Sync to Meet tab start time">⚡ Sync Start</button>
       </div>
-      <div class="section">
-        <h3>Rules & Automation</h3>
-        <label>Min Class Minutes: <input type="number" id="minClassMinutes" value="35"></label><br>
-        <label>Warn Minutes: <input type="number" id="warnMinutes" value="70"></label><br>
-        <label><input type="checkbox" id="autoRecordClass" checked> Auto Record Class</label><br>
-        <label><input type="checkbox" id="autoFocusPresentation" checked> Auto Focus Presentation</label><br>
-        <label><input type="checkbox" id="autoOpenCalendarTab" checked> Auto Open Calendar Tab</label>
+      <div class="quick-offsets">
+        <button type="button" class="offset-btn" data-delta="-300000">-5m</button>
+        <button type="button" class="offset-btn" data-delta="-60000">-1m</button>
+        <button type="button" class="offset-btn" data-delta="60000">+1m</button>
+        <button type="button" class="offset-btn" data-delta="300000">+5m</button>
+        <button type="button" class="offset-btn" data-delta="900000">+15m</button>
+      </div>
+      <div class="manual-set-row">
+        <input type="number" id="inputHh" min="0" max="99" placeholder="HH" value="0" />
+        <span>:</span>
+        <input type="number" id="inputMm" min="0" max="59" placeholder="MM" value="0" />
+        <span>:</span>
+        <input type="number" id="inputSs" min="0" max="59" placeholder="SS" value="0" />
+        <button type="button" id="setTimeBtn" class="primary-solid">Set Time</button>
       </div>
     </div>
   </div>
+
+  <!-- TAB 2: CLASSROOMS ORGANIZER PANEL -->
+  <div class="tab-pane" id="tab-classrooms">
+    <div class="card">
+      <div class="section-title">
+        <span>Add / Update Classroom & Starting Class #</span>
+        <span id="roomSaveStatus" style="color: var(--gm-green); font-size: 10px;"></span>
+      </div>
+      <div class="profile-form-row">
+        <input type="text" id="roomLinkInput" placeholder="Meet Link or Code (e.g. kyt-capi-mrb)" />
+        <span style="font-size: 10.5px; color: var(--gm-text-secondary); white-space: nowrap;">Prior Classes (Mo):</span>
+        <input type="number" id="roomInitialOffsetInput" min="0" max="500" value="0" title="How many classes you already took this month before using the extension (e.g. enter 5 so next class is Class #6)" style="width: 52px; flex: none; text-align: center;" />
+      </div>
+      <div class="profile-form-row">
+        <input type="text" id="roomNameInput" placeholder="Class Name (e.g. HSC Physics Batch 1)" />
+        <input type="text" id="roomScheduleInput" placeholder="Schedule (e.g. Sun/Tue/Thu 8PM)" />
+      </div>
+      <div class="profile-form-row">
+        <input type="text" id="roomStudentsInput" placeholder="Students (e.g. Rahim, Tahmid, Sara)" />
+        <select id="roomCurrencySelect" style="width: 55px; flex: none;">
+          <option value="$">$ USD</option>
+          <option value="৳">৳ BDT</option>
+          <option value="€">€ EUR</option>
+          <option value="£">£ GBP</option>
+          <option value="₹">₹ INR</option>
+        </select>
+        <input type="number" id="roomFeeRateInput" placeholder="Fee / Rate" min="0" step="any" style="width: 75px; flex: none; text-align: right;" />
+      </div>
+      <div class="profile-form-row" style="margin-bottom: 0;">
+        <input type="text" id="roomEmailsInput" placeholder="Student Mails (e.g. rahim@gmail.com, sara@gmail.com)" />
+        <select id="roomRateTypeSelect" style="width: 85px; flex: none;">
+          <option value="Per Class">Per Class</option>
+          <option value="Monthly">Monthly</option>
+        </select>
+        <button type="button" id="saveClassroomBtn" class="primary-solid">+ Save</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="padding: 0 2px;">
+      <span>Your Saved Classrooms</span>
+      <button type="button" class="text-btn" id="openDashboardRoomsBtn">📊 Open Full Manager</button>
+    </div>
+    <div class="classroom-list" id="classroomList">
+      <div class="empty-msg">No classrooms saved yet. Add a Class Link above!</div>
+    </div>
+  </div>
+
+  <!-- TAB 3: TUITION DATABASE (GROUPED BY INDIVIDUAL MEETING CODE) -->
+  <div class="tab-pane" id="tab-tuitions">
+    <div class="kpi-grid">
+      <div class="kpi-box">
+        <div class="kpi-val" id="kpiMonthClasses">0</div>
+        <div class="kpi-lbl">This Month</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-val" id="kpiTotalClasses">0</div>
+        <div class="kpi-lbl">All-Time</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-val" id="kpiTotalHours">0h 0m</div>
+        <div class="kpi-lbl">Total Hours</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-val" id="kpiEstBilling">$0</div>
+        <div class="kpi-lbl">Est. Billing</div>
+      </div>
+    </div>
+
+    <div class="code-Filter-row">
+      <select id="filterCategory">
+        <option value="ALL">All Categories</option>
+        <option value="Tuition / Class">🎓 Tuition / Class</option>
+        <option value="Batch Coaching">📚 Batch Coaching</option>
+        <option value="Exam / Doubt">📝 Exam / Doubt</option>
+        <option value="Personal / Other">💬 Personal / Other</option>
+      </select>
+      <input type="text" id="searchCodeInput" placeholder="Search class, student, or code..." />
+    </div>
+
+    <div class="tuition-code-list" id="tuitionCodeList">
+      <div class="empty-msg">No tuition classes recorded yet</div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+      <button type="button" id="openDashboardBtn" class="tonal-blue" style="font-size: 11px;">📊 Full DB & Documents Sync</button>
+      <div>
+        <button type="button" class="text-btn" id="exportIcsBtn" title="Export qualified classes (.ics) for Google Calendar">📅 .ics</button>
+        <button type="button" class="text-btn" id="exportCsvBtn">CSV</button>
+        <button type="button" class="text-btn" id="exportJsonBtn" title="Export full database (.json)">JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: UNIFIED GOOGLE DRIVE, SHEETS & CALENDAR AUTO-SYNC + RULES -->
+  <div class="tab-pane" id="tab-settings">
+    <div class="cloud-card">
+      <div class="section-title">
+        <span>☁️ Google Drive, Sheets & Calendar Auto-Sync</span>
+        <span id="sheetsSyncStatus" style="color: var(--gm-green); font-size: 10px;"></span>
+      </div>
+
+      <!-- Live Cloud Connection Status Banner -->
+      <div class="cloud-status-banner">
+        <div class="cloud-status-indicator">
+          <span class="status-dot" id="cloudStatusDot"></span>
+          <span id="cloudStatusText">Cloud Sync: Not Configured</span>
+        </div>
+        <span id="lastSyncedTimeText" style="color: var(--gm-text-secondary); font-size: 10px;"></span>
+      </div>
+
+      <!-- Quick Resource Links (populated when synced) -->
+      <div class="cloud-pills-row" id="cloudLinksRow" style="display: none;">
+        <a href="#" target="_blank" id="driveFolderPill" class="cloud-pill-btn">📂 Open Drive Backups ↗</a>
+        <a href="#" target="_blank" id="sheetsDocPill" class="cloud-pill-btn">📊 Open Google Sheet ↗</a>
+        <a href="https://calendar.google.com" target="_blank" class="cloud-pill-btn">📅 Open Google Calendar ↗</a>
+      </div>
+
+      <div class="profile-form-row" style="margin-top: 8px;">
+        <input type="text" id="googleSheetsUrl" placeholder="Paste Google Apps Script Web App URL..." />
+      </div>
+
+      <div class="btn-row" style="justify-content: space-between; margin-top: 4px;">
+        <button type="button" id="copySheetsScriptBtn" class="tonal-blue" title="Copy the unified Google Apps Script that handles Google Drive, Sheets & Calendar">📋 Copy Unified Script</button>
+        <button type="button" id="testConnectionBtn" class="tonal-purple" title="Test connection to Google Apps Script">⚡ Test Connection</button>
+        <button type="button" id="pushSheetsBtn" class="tonal-green" title="Sync entire database to Google Cloud">☁️ Sync All Now</button>
+        <button type="button" id="pullSheetsBtn" title="Restore database from Google Cloud">📥 Restore</button>
+      </div>
+
+      <!-- Auto-Sync Trigger Options -->
+      <div style="background: var(--gm-surface-elevated); border-radius: 10px; padding: 8px 10px; margin-top: 8px;">
+        <label class="setting-row" style="margin-bottom: 5px;">
+          <span>Auto-sync immediately when class finishes (≥35m)</span>
+          <input type="checkbox" id="autoSyncOnClassEnd" checked />
+        </label>
+        <label class="setting-row">
+          <span>Background Auto-Sync Interval</span>
+          <select id="autoSyncIntervalSelect">
+            <option value="30">Every 30 Minutes (Recommended)</option>
+            <option value="15">Every 15 Minutes</option>
+            <option value="60">Every 60 Minutes</option>
+            <option value="0">On Class End Only</option>
+            <option value="-1">Manual Only</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- 30-Second Setup Instructions Accordion -->
+      <details style="margin-top: 8px; font-size: 11px; color: var(--gm-text-secondary); cursor: pointer;">
+        <summary style="color: var(--gm-blue); font-weight: 500;">📖 1-Minute Setup Guide (Zero API Keys Needed)</summary>
+        <div style="padding: 6px 0; line-height: 1.5;">
+          1. Open a Google Sheet (<a href="https://sheets.new" target="_blank" style="color: var(--gm-blue);">sheets.new</a>).<br>
+          2. Click <strong>Extensions → Apps Script</strong>.<br>
+          3. Click <strong>📋 Copy Unified Script</strong> above, paste it into Code.gs, and Save.<br>
+          4. Click <strong>Deploy → New deployment → Web app</strong> (Execute as: <em>Me</em>, Access: <em>Anyone</em>).<br>
+          5. Paste the generated Web App URL into the box above and click <strong>⚡ Test Connection</strong>!
+        </div>
+      </details>
+    </div>
+
+    <!-- Local PC Backup Card -->
+    <div class="card settings-list">
+      <div class="section-title">
+        <span>Local Disk Backup & File Restore</span>
+      </div>
+      <label class="setting-row">
+        <span>Auto-save DB backup file to PC (`Tuition_Tracker_DB/`)</span>
+        <input type="checkbox" id="autoBackupLocalFile" checked />
+      </label>
+      <div class="btn-row" style="justify-content: space-between; margin-top: 4px;">
+        <button type="button" id="saveDiskNowBtn" class="tonal-blue">💾 Save DB to Disk</button>
+        <button type="button" id="importJsonBtn">📂 Restore DB File (.json)</button>
+        <input type="file" id="importJsonFileInput" accept=".json" style="display: none;" />
+      </div>
+    </div>
+
+    <!-- Class Rules & Alerts -->
+    <div class="card settings-list">
+      <div class="section-title">Class Rule (35m), Alert (1h 10m) & Auto-Rec</div>
+      <label class="setting-row">
+        <span>Minimum duration to count as Class (mins)</span>
+        <input type="number" id="minClassMinutes" min="1" max="240" value="35" />
+      </label>
+      <label class="setting-row">
+        <span>Warning alert at (70 mins = 1 hr 10 mins)</span>
+        <input type="number" id="warnMinutes" min="0" max="480" value="70" />
+      </label>
+      <label class="setting-row">
+        <span>Auto-prompt class recording on join (.webm)</span>
+        <input type="checkbox" id="autoRecordClass" checked />
+      </label>
+      <label class="setting-row">
+        <span>Auto-focus & pin presentation / screen-share</span>
+        <input type="checkbox" id="autoFocusPresentation" checked />
+      </label>
+      <label class="setting-row">
+        <span>Auto-open Google Calendar tab fallback</span>
+        <input type="checkbox" id="autoOpenCalendarTab" checked />
+      </label>
+      <label class="setting-row">
+        <span>Badge position (or drag pill)</span>
+        <select id="position">
+          <option value="top-center">Top-Middle (Default)</option>
+          <option value="top-left">Top-Left</option>
+          <option value="top-right">Top-Right</option>
+          <option value="bottom-center">Bottom-Middle</option>
+          <option value="bottom-left">Bottom-Left</option>
+          <option value="bottom-right">Bottom-Right</option>
+          <option value="custom">Custom (Dragged)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- INVOICE & TUITION STATEMENT MODAL -->
+  <div class="modal-overlay" id="invoiceModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title" id="invoiceModalTitle">🎓 Tuition Statement & Invoice</span>
+        <button type="button" class="close-modal-btn" id="closeInvoiceModalBtn">✕</button>
+      </div>
+      <div id="invoiceModalContent">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="btn-row" style="justify-content: flex-end; margin-top: 8px;">
+        <button type="button" id="copyInvoiceTextBtn" class="tonal-blue">📋 Copy WhatsApp Summary</button>
+        <button type="button" id="printInvoiceBtn" class="tonal-green">🖨️ Print / Save PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="update-footer">
+    <span id="versionStatusText">v3.0.0 • Business Edition (Drive, Sheets & Calendar Sync)</span>
+    <button type="button" class="text-btn" id="checkUpdateBtn">Check for updates</button>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
