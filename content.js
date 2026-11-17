@@ -1,4 +1,4 @@
-(funct(function () {
+(function () {
   let firstStartedAtMs = Date.now();
   let totalPausedMs = 0;
   let manualOffsetMs = 0;
