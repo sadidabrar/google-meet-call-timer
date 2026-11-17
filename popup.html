@@ -6,19 +6,19 @@
   <link rel="stylesheet" href="styles.css">
   <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { width: 395px; background: #202124; color: #e8eaed; font-family: "Google Sans", "Segoe UI", Roboto, sans-serif; font-size: 12.5px; padding: 12px; }
+body { width: 400px; background: #202124; color: #e8eaed; font-family: "Google Sans", "Segoe UI", Roboto, sans-serif; font-size: 12.5px; padding: 12px; }
 .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #3c4043; }
-.brand, h1, h2, h3 { font-size: 13.5px; font-weight: 600; color: #e8eaed; margin-bottom: 6px; }
+.brand, h1, h2, h3 { font-size: 13.5px; font-weight: 600; color: #e8eaed; margin-bottom: 6px; } .header .title { font-size: 14px; white-space: nowrap; margin-bottom: 0; }
 .badge, #callStatusBadge { font-size: 11px; padding: 3px 10px; border-radius: 999px; background: #303134; color: #81c995; font-weight: 500; white-space: nowrap; }
-.nav-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #28292c; padding: 4px; border-radius: 999px; border: 1px solid #3c4043; margin-bottom: 10px; }
-.nav-tab { background: transparent; color: #9aa0a6; border: none; border-radius: 999px; padding: 6px 4px; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.nav-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; width: 100%; overflow: hidden; background: #28292c; padding: 4px; border-radius: 999px; border: 1px solid #3c4043; margin-bottom: 10px; }
+.nav-tab { background: transparent; color: #9aa0a6; border: none; border-radius: 999px; padding: 6px 4px !important; font-size: 11px !important; font-weight: 500; cursor: pointer; white-space: nowrap; text-align: center; width: 100% !important; min-width: 0; }
 .nav-tab.active { background: rgba(138,180,248,0.18); color: #8ab4f8; font-weight: 600; }
 .tab-pane, .tab-content { display: none !important; }
 .tab-pane.active, .tab-content.active { display: block !important; }
 .card { background: #28292c; border: 1px solid #3c4043; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
 .live-card { text-align: center; background: #303134; }
 #timerDisplay, .live-time { font-family: ui-monospace, "Roboto Mono", monospace; font-size: 30px; font-weight: 700; color: #fff; margin: 6px 0 10px; letter-spacing: 1px; }
-.btn-row, .btn-group, .quick-offsets { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 6px !important; margin-top: 8px !important; }
+.btn-row { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 6px !important; margin-top: 8px !important; } .btn-group { display: flex !important; flex-wrap: nowrap !important; justify-content: center !important; gap: 5px !important; margin-top: 8px !important; } .btn-group button, .btn-group .btn { width: auto !important; flex: 0 1 auto !important; padding: 6px 9px !important; font-size: 11px !important; border-radius: 9999px !important; white-space: nowrap !important; } #pauseBtn, #calQuickBtn { background: rgba(138, 180, 248, 0.16) !important; color: #8ab4f8 !important; border: 1px solid rgba(138, 180, 248, 0.35) !important; } #recQuickBtn { background: rgba(242, 139, 130, 0.16) !important; color: #f28b82 !important; border: 1px solid rgba(242, 139, 130, 0.35) !important; } #hwQuickBtn { background: rgba(129, 201, 149, 0.16) !important; color: #81c995 !important; border: 1px solid rgba(129, 201, 149, 0.35) !important; } #resetBtn { background: #3c4043 !important; color: #e8eaed !important; border: 1px solid #5f6368 !important; } .quick-offsets { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 5px !important; margin-top: 8px !important; margin-bottom: 6px !important; } .quick-offsets button { width: 100% !important; padding: 6px 4px !important; font-size: 11px !important; } .time-inputs { display: flex !important; align-items: center !important; gap: 6px !important; } .time-inputs input { flex: 1 !important; min-width: 0 !important; margin-bottom: 0 !important; text-align: center; } .time-inputs button { width: auto !important; flex: none !important; white-space: nowrap !important; } .form-row { display: flex !important; align-items: center !important; gap: 6px !important; margin-bottom: 6px !important; } .form-row input { flex: 1 !important; min-width: 0 !important; margin-bottom: 0 !important; } .form-row .inline-label { white-space: nowrap !important; font-size: 11px !important; color: #9aa0a6; flex: none !important; } #profileCurrentClassNumInput, #roomInitialOffsetInput { width: 54px !important; flex: none !important; text-align: center !important; } button.btn-save { width: auto !important; flex: none !important; padding: 6px 14px !important; border-radius: 9999px !important; background: #8ab4f8 !important; color: #202124 !important; font-weight: 600 !important; white-space: nowrap !important; }
 button, .btn { width: auto !important; height: auto !important; border-radius: 999px !important; padding: 6px 12px !important; font-size: 11.5px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; }
 button:hover { background: #4d5156; border-color: #8ab4f8; }
 #saveProfileBtn, #saveClassroomBtn, #setTimeBtn { background: #8ab4f8; color: #202124; font-weight: 600; border: none; }
@@ -55,7 +55,7 @@ input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: #8a
         <div class="btn-group">
           <button id="pauseBtn" class="btn btn-primary">Pause</button>
           <button id="recQuickBtn" class="btn btn-action">⏺ Record</button>
-          <button id="hwQuickBtn" class="btn btn-action">✉️ Homework Mail</button>
+          <button id="hwQuickBtn" class="btn btn-action">✉️ Homework</button>
           <button id="calQuickBtn" class="btn btn-action">📅 Calendar</button>
           <button id="resetBtn" class="btn btn-danger">Reset</button>
         </div>
@@ -64,12 +64,12 @@ input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: #8a
       <div class="section">
         <h3>Active Classroom & Starting Class #</h3>
         <div class="form-grid">
-          <input type="text" id="profileLabelInput" placeholder="Class Name">
-          <label>This Class #: <input type="number" id="profileCurrentClassNumInput" min="1" value="1"></label>
-          <input type="text" id="profileStudentsInput" placeholder="Students">
-          <input type="text" id="profileScheduleInput" placeholder="Schedule">
-          <input type="text" id="profileEmailsInput" placeholder="Student Emails">
-          <button id="saveProfileBtn" class="btn btn-primary">Save Active Profile</button>
+          <div class="form-row"><input type="text" id="profileLabelInput" placeholder="Class Name">
+          <label class="inline-label">This Class #:</label><input type="number" id="profileCurrentClassNumInput" min="1" value="1"></div>
+          <div class="form-row"><input type="text" id="profileStudentsInput" placeholder="Students">
+          <input type="text" id="profileScheduleInput" placeholder="Schedule"></div>
+          <div class="form-row"><input type="text" id="profileEmailsInput" placeholder="Student Emails">
+          <button id="saveProfileBtn" class="btn btn-primary btn-save">Save Active Profile</button></div>
           <span id="saveProfileStatus"></span>
         </div>
       </div>
@@ -97,13 +97,13 @@ input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: #8a
       <div class="section">
         <h3>Add / Edit Classroom</h3>
         <div class="form-grid">
-          <input type="text" id="roomLinkInput" placeholder="Meet Link / Code">
-          <label>Prior Classes (Mo): <input type="number" id="roomInitialOffsetInput" min="0" value="0"></label>
-          <input type="text" id="roomNameInput" placeholder="Class Name">
-          <input type="text" id="roomScheduleInput" placeholder="Schedule">
-          <input type="text" id="roomStudentsInput" placeholder="Students">
+          <div class="form-row"><input type="text" id="roomLinkInput" placeholder="Meet Link / Code">
+          <label class="inline-label">Prior Classes (Mo):</label><input type="number" id="roomInitialOffsetInput" min="0" value="0"></div>
+          <div class="form-row"><input type="text" id="roomNameInput" placeholder="Class Name">
+          <input type="text" id="roomScheduleInput" placeholder="Schedule"></div>
+          <div class="form-row"><input type="text" id="roomStudentsInput" placeholder="Students">
           <input type="text" id="roomEmailsInput" placeholder="Student Emails">
-          <button id="saveClassroomBtn" class="btn btn-primary">Save Classroom</button>
+          <button id="saveClassroomBtn" class="btn btn-primary btn-save">Save Classroom</button></div>
           <span id="roomSaveStatus"></span>
         </div>
       </div>
